@@ -1,0 +1,5 @@
+resources/new_game.png
+resources/load_game.png
+resources/settings.png
+resources/database.png
+resources/exit.png
