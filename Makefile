@@ -3,7 +3,7 @@
 VPATH	=	src
 SDIR 	=	src/
 NAME	=	auto_chess
-FUNCTS	=	main.cpp
+FUNCTS	=	main.cpp sprite.cpp menu.cpp database.cpp get_next_line.cpp get_next_line_utils.cpp
 OBJS	=	$(FUNCTS:.cpp=.o)
 SPATH	=	$(addprefix $(SDIR),$(OBJS))
 
