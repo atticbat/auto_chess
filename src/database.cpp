@@ -173,6 +173,37 @@ game_state  check_database(sprite *btn, input_box *in_db, Vector2 mousePoint, in
     return (DATABASE);
 }
 
+void    draw_grid(int scroll_offset)
+{
+    int i;
+    int j;
+    int k;
+    int l;
+
+    i = 0;
+    while (i < MAX_UNITS)
+    {
+        j = 0;
+        k = 0;
+        l = 0;
+        while (j < 13)
+        {
+            if (unit_db[i][k] == ',' || unit_db[i][k] == '\0')
+            {
+                l = 0;
+                DrawText(db_names[j], 64 + 112 * j, 192 + i * 20 + scroll_offset, 16, BLACK);
+                j++;
+            }
+            else if (unit_db[i][k] >= '0' && unit_db[i][k] <= '9')
+            {
+                DrawTextCodepoint(GetFontDefault(), unit_db[i][k], (Vector2) { (float)(128 + 112 * j + 9 * l), (float)(192 + i * 20) + scroll_offset }, 16, BLACK);
+                l++;
+            }
+            k++;
+        }
+        i++;
+    }
+}
 
 void    draw_database(sprite *btn, input_box *in_db, int screen_width, int screen_height, int frame_count)
 {
@@ -190,32 +221,6 @@ void    draw_database(sprite *btn, input_box *in_db, int screen_width, int scree
     while (i < DATABASE_BUTTONS)
     {
         DrawTextureRec(btn[i].image, btn[i].source, (Vector2){ btn[i].hitbox.x, btn[i].hitbox.y }, WHITE);
-        i++;
-    }
-    i = 0;
-    int j;
-    int k;
-    int l;
-    while (i < MAX_UNITS)
-    {
-        j = 0;
-        k = 0;
-        l = 0;
-        while (j < 13)
-        {
-            if (unit_db[i][k] == ',' || unit_db[i][k] == '\0')
-            {
-                l = 0;
-                DrawText(db_names[j], 64 + 112 * j, 192 + i * 20, 16, BLACK);
-                j++;
-            }
-            else if (unit_db[i][k] >= '0' && unit_db[i][k] <= '9')
-            {
-                DrawTextCodepoint(GetFontDefault(), unit_db[i][k], (Vector2) { (float)(128 + 112 * j + 9 * l), (float)(192 + i * 20) }, 16, BLACK);
-                l++;
-            }
-            k++;
-        }
         i++;
     }
 }

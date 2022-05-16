@@ -1,33 +1,13 @@
 #include "auto_chess.hpp"
-// #include <stdio.h>
 
-// static sprite   *initialise_case(game_state current_state, int *unique_id, int offset, int screen_width, int screen_height)
-// {
-//     sprite  *btn;
-
-//     switch (current_state)
-//     {
-//         case (MENU)
-//         {
-//             btn = initialise_menu(unique_id, 64);
-//         } break;
-//         case (DATABASE)
-//         {
-//             btn = initialise_db(&unique_id, 64, screen_width, screen_height);
-//         } break;
-//         default:
-//         {
-//             btn = NULL;
-//             break;
-//         }
-//     }
-//     return (btn);
-// }
+#define RAYGUI_IMPLEMENTATION
+#include "../raylib-cpp/include/raygui.h"
 
 int main(void)
 {
     const int   screen_width = 1600;
     const int   screen_height = 900;
+    const int   header_offset = 64 * (((DATABASE_INPUTS) * 160) / (screen_width - 160)) + 96;
     int         unique_id = 0;
     game_state  current_state = LOADING;
     int         frame_count = 0;
@@ -37,6 +17,12 @@ int main(void)
     
     Vector2 mousePoint = { 0.0f, 0.0f };
     InitWindow(screen_width, screen_height, "auto_chess");
+
+    Rectangle panelRec = { 0, header_offset, screen_width, screen_height - header_offset };
+    Rectangle panelContentRec = { 0, header_offset, screen_width, (screen_height - header_offset) * 4 };
+    Vector2 panelScroll = { 0, -20 };
+    bool showContentArea = true;
+
     btn_menu = initialise_menu(&unique_id, 64);
     SetTargetFPS(60);
     while (!WindowShouldClose())
@@ -131,6 +117,8 @@ int main(void)
                 } break;
                 case DATABASE:
                 {
+                    Rectangle view = GuiScrollPanel(panelRec, NULL, panelContentRec, &panelScroll);
+                    draw_grid(panelScroll.y);
                     draw_database(btn_menu, in_db, screen_width, screen_height, frame_count);
                 } break;
                 default: break;
