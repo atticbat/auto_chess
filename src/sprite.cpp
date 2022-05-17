@@ -25,7 +25,6 @@ void    unload_sprite(sprite **btn, int count)
     while (i < count)
     {
         UnloadTexture(btn[0][i].image);
-        // btn[0][i].destroy();
         i++;
     }
     free (*btn);

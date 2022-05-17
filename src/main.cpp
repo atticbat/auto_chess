@@ -5,8 +5,8 @@
 
 int main(void)
 {
-    const int   screen_width = 1600;
-    const int   screen_height = 900;
+    const int   screen_width = 1920;
+    const int   screen_height = 1080;
     const int   header_offset = 64 * (((DATABASE_INPUTS) * 160) / (screen_width - 160)) + 96;
     int         unique_id = 0;
     game_state  current_state = LOADING;
@@ -19,9 +19,12 @@ int main(void)
     InitWindow(screen_width, screen_height, "auto_chess");
 
     Rectangle panelRec = { 0, header_offset, screen_width, screen_height - header_offset };
-    Rectangle panelContentRec = { 0, header_offset, screen_width, (screen_height - header_offset) * 4 };
-    Vector2 panelScroll = { 0, -20 };
-    bool showContentArea = true;
+    Rectangle panelContentRec = { 0, header_offset, 1080, 2880 };
+    Vector2 panelScroll = { 99, -20 };
+
+    int     resolution_chosen = 0;
+    Rectangle resolution_hitbox = {25, 65, 125, 30};
+    bool    resolution_edit_mode = false;
 
     btn_menu = initialise_menu(&unique_id, 64);
     SetTargetFPS(60);
@@ -29,11 +32,11 @@ int main(void)
     {
         mousePoint = GetMousePosition();
 
+        frame_count++;
         switch(current_state)
         {
             case LOADING:
             {
-                frame_count++;
                 if (frame_count > 90)
                     current_state = MENU;
             } break;
@@ -45,18 +48,23 @@ int main(void)
                     unload_sprite(&btn_menu, MENU_BUTTONS);
                     btn_menu = initialise_db(&unique_id, 64, screen_width, screen_height);
                     in_db = initialise_db_in(screen_width);
-                    
                 }
                 else if (current_state == SETTINGS)
+                {
                     unload_sprite(&btn_menu, MENU_BUTTONS);
+                    btn_menu = initialise_settings(&unique_id, 32, screen_width, screen_height);
+                }
                 else if (current_state == DRAFT)
                     unload_sprite(&btn_menu, MENU_BUTTONS);
             } break;
             case SETTINGS:
             {
-                if (IsKeyPressed(KEY_ENTER) || IsGestureDetected(GESTURE_TAP))
+                current_state = check_settings(btn_menu, mousePoint);
+                if (CheckCollisionPointRec(mousePoint, resolution_hitbox) && IsGestureDetected(GESTURE_TAP))
+                    resolution_edit_mode = !resolution_edit_mode;
+                if (current_state == MENU)
                 {
-                    current_state = MENU;
+                    unload_sprite(&btn_menu, SETTINGS_BUTTONS);
                     btn_menu = initialise_menu(&unique_id, 64);
                 }
             } break;
@@ -85,40 +93,43 @@ int main(void)
             default: break;
         }
         BeginDrawing();
-            ClearBackground(RAYWHITE);
             switch (current_state)
             {
                 case LOADING:
                 {
+                    ClearBackground(RAYWHITE);
                     DrawText("LOADING...", 20, 20, 40, LIGHTGRAY);
                     DrawText("PLEASE WAIT.", 290, 220, 20, GRAY);
                 } break;
                 case MENU:
                 {
+                    ClearBackground(RAYWHITE);
                     draw_menu(btn_menu, screen_width, screen_height);
                 } break;
                 case SETTINGS:
                 {
-                    DrawRectangle(0, 0, screen_width, screen_height, LIGHTGRAY);
-                    DrawText("SETTINGS", 120, 160, 20, DARKGRAY);
-                    DrawText("PRESS ENTER or TAP to JUMP to MENU SCREEN", 120, 220, 20, DARKGRAY);
+                    draw_settings(btn_menu, screen_width, screen_height);
+                    GuiDropdownBox(resolution_hitbox, "ONE;TWO;THREE;FOUR", &resolution_chosen, resolution_edit_mode);
                 } break;
                 case DRAFT:
                 {
+                    ClearBackground(RAYWHITE);
                     DrawRectangle(0, 0, screen_width, screen_height, YELLOW);
                     DrawText("DRAFT", 120, 160, 20, DARKBROWN);
                     DrawText("PRESS ENTER or TAP to JUMP to SIMULATION SCREEN", 120, 220, 20, DARKBROWN);
                 } break;
                 case SIMULATION:
                 {
+                    ClearBackground(RAYWHITE);
                     DrawRectangle(0, 0, screen_width, screen_height, PINK);
                     DrawText("SIMULATION", 120, 160, 20, DARKPURPLE);
                     DrawText("PRESS ENTER or TAP to JUMP to MENU SCREEN", 120, 220, 20, DARKPURPLE);
                 } break;
                 case DATABASE:
                 {
-                    Rectangle view = GuiScrollPanel(panelRec, NULL, panelContentRec, &panelScroll);
-                    draw_grid(panelScroll.y);
+                    ClearBackground(RAYWHITE);
+                    GuiScrollPanel(panelRec, NULL, panelContentRec, &panelScroll);
+                    draw_grid(panelScroll.x, panelScroll.y);
                     draw_database(btn_menu, in_db, screen_width, screen_height, frame_count);
                 } break;
                 default: break;

@@ -173,12 +173,16 @@ game_state  check_database(sprite *btn, input_box *in_db, Vector2 mousePoint, in
     return (DATABASE);
 }
 
-void    draw_grid(int scroll_offset)
+void    draw_grid(int scroll_h_offset, int scroll_v_offset)
 {
     int i;
     int j;
     int k;
     int l;
+    mINI::INIFile file ("data/UnitNames.ini");
+    mINI::INIStructure ini;
+    file.read(ini);
+    char    int_str[4];
 
     i = 0;
     while (i < MAX_UNITS)
@@ -186,17 +190,19 @@ void    draw_grid(int scroll_offset)
         j = 0;
         k = 0;
         l = 0;
+        ft_itoa(i, int_str);
+        DrawText(ini.get("UnitNames").get(int_str).c_str(), 32 + 112 * j + scroll_h_offset, 192 + i * 20 + scroll_v_offset, 16, BLACK);       
         while (j < 13)
         {
             if (unit_db[i][k] == ',' || unit_db[i][k] == '\0')
             {
                 l = 0;
-                DrawText(db_names[j], 64 + 112 * j, 192 + i * 20 + scroll_offset, 16, BLACK);
+                DrawText(db_names[j], 192 + 112 * j + scroll_h_offset, 192 + i * 20 + scroll_v_offset, 16, BLACK);
                 j++;
             }
             else if (unit_db[i][k] >= '0' && unit_db[i][k] <= '9')
             {
-                DrawTextCodepoint(GetFontDefault(), unit_db[i][k], (Vector2) { (float)(128 + 112 * j + 9 * l), (float)(192 + i * 20) + scroll_offset }, 16, BLACK);
+                DrawTextCodepoint(GetFontDefault(), unit_db[i][k], (Vector2) { (float)(256 + 112 * j + 9 * l + scroll_h_offset), (float)(192 + i * 20) + scroll_v_offset }, 16, BLACK);
                 l++;
             }
             k++;
