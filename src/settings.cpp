@@ -1,7 +1,6 @@
 #include "settings.hpp"
 
 const char  *settings_paths[2] = {"resources/return.png", "resources/settings.png"};
-static int  dim_background = 0;
 
 sprite  *initialise_settings(int *unique_id, int offset, int screen_width, int screen_height)
 {
@@ -11,7 +10,6 @@ sprite  *initialise_settings(int *unique_id, int offset, int screen_width, int s
     int     offset_y;
 
     i = 0;
-    dim_background = 0;
     offset_x = ((screen_width - 960) / 2) + offset;
     offset_y = ((screen_height + 540) / 2) - offset - 40;
     btn = (sprite *) malloc (sizeof(sprite) * SETTINGS_BUTTONS);
@@ -33,9 +31,6 @@ void    draw_settings(sprite *btn, int screen_width, int screen_height)
     i = 0;
     offset_left = ((screen_width - 960) / 2); 
     offset_top = ((screen_height - 540) / 2);
-    if (dim_background < 50)
-        DrawRectangle(0, 0, screen_width, screen_height, (Color) {0, 0, 0, 20});
-    dim_background++;
     DrawRectangle(offset_left, offset_top, 960, 540, LIGHTGRAY);
     while (i < SETTINGS_BUTTONS)
     {

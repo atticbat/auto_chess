@@ -2,6 +2,8 @@
 
 #define RAYGUI_IMPLEMENTATION
 #include "../raylib-cpp/include/raygui.h"
+#include <stdlib.h>
+#include <stdio.h>
 
 int main(void)
 {
@@ -14,6 +16,7 @@ int main(void)
     sprite      *btn_menu;
     input_box   *in_db;
     int         i = 0;
+    char        name_buffer[50];
     
     Vector2 mousePoint = { 0.0f, 0.0f };
     InitWindow(screen_width, screen_height, "auto_chess");
@@ -22,9 +25,9 @@ int main(void)
     Rectangle panelContentRec = { 0, header_offset, 1080, 2880 };
     Vector2 panelScroll = { 99, -20 };
 
-    int     resolution_chosen = 0;
-    Rectangle resolution_hitbox = {25, 65, 125, 30};
-    bool    resolution_edit_mode = false;
+    gui_dropdown    drop_downs[2];
+    int     resolution_chosen[2] = { 0, 0 };
+    bool    resolution_edit_mode[2] = { false, false };
 
     btn_menu = initialise_menu(&unique_id, 64);
     SetTargetFPS(60);
@@ -53,6 +56,10 @@ int main(void)
                 {
                     unload_sprite(&btn_menu, MENU_BUTTONS);
                     btn_menu = initialise_settings(&unique_id, 32, screen_width, screen_height);
+                    drop_downs[0].set_dropdown_bounds((screen_width - 960)/2, (screen_height - 540)/2, 0);
+                    drop_downs[0].set_name(0);
+                    // drop_downs[1].set_dropdown_bounds((screen_width - 960)/2, (screen_height - 540)/2, 1);
+                    // drop_downs[1].set_name(0);
                 }
                 else if (current_state == DRAFT)
                     unload_sprite(&btn_menu, MENU_BUTTONS);
@@ -60,8 +67,8 @@ int main(void)
             case SETTINGS:
             {
                 current_state = check_settings(btn_menu, mousePoint);
-                if (CheckCollisionPointRec(mousePoint, resolution_hitbox) && IsGestureDetected(GESTURE_TAP))
-                    resolution_edit_mode = !resolution_edit_mode;
+                if (CheckCollisionPointRec(mousePoint, drop_downs[0].bounds) && IsGestureDetected(GESTURE_TAP))
+                    resolution_edit_mode[0] = !resolution_edit_mode[0];
                 if (current_state == MENU)
                 {
                     unload_sprite(&btn_menu, SETTINGS_BUTTONS);
@@ -109,7 +116,7 @@ int main(void)
                 case SETTINGS:
                 {
                     draw_settings(btn_menu, screen_width, screen_height);
-                    GuiDropdownBox(resolution_hitbox, "ONE;TWO;THREE;FOUR", &resolution_chosen, resolution_edit_mode);
+                    GuiDropdownBox(drop_downs[0].bounds, drop_downs[0].names, &resolution_chosen[0], resolution_edit_mode[0]);
                 } break;
                 case DRAFT:
                 {

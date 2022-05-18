@@ -3934,7 +3934,7 @@ static const char **GuiTextSplit(const char *text, int *count, int *textRow)
     {
         buffer[i] = text[i];
         if (buffer[i] == '\0') break;
-        else if ((buffer[i] == ';') || (buffer[i] == '\n'))
+        else if ((buffer[i] == '~') || (buffer[i] == '\n'))
         {
             result[counter] = buffer + i + 1;
 

@@ -4,7 +4,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include "get_next_line.hpp"
 #include <iostream>
 #include <fstream>
 
