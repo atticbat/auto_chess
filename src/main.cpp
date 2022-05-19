@@ -4,37 +4,67 @@
 #include "../raylib-cpp/include/raygui.h"
 #include <stdlib.h>
 #include <stdio.h>
+// #ifndef PLATFORM_DESKTOP
+// # define PLATFORM_DESKTOP 1
+// #endif
 
 int main(void)
 {
-    const int   screen_width = 1920;
-    const int   screen_height = 1080;
-    const int   header_offset = 64 * (((DATABASE_INPUTS) * 160) / (screen_width - 160)) + 96;
+    const int   settings_width = 800;
+    const int   settings_height = 450;
     int         unique_id = 0;
     game_state  current_state = LOADING;
     int         frame_count = 0;
     sprite      *btn_menu;
     input_box   *in_db;
-    int         i = 0;
-    char        name_buffer[50];
+    int dim_stop = 0;
     
+    SetConfigFlags(FLAG_VSYNC_HINT);
+    InitWindow(0, 0, "Auto Chess");
+    const int   max_width = GetScreenWidth();
+    const int   max_height = GetScreenHeight();
+    int         screen_width = 1920;
+    int         screen_height = 1080;
+    const int   default_width = screen_width;
+    const int   default_height = screen_height;
+    SetWindowSize(screen_width, screen_height);
+    const float header_offset = 64 * (((DATABASE_INPUTS) * 160) / (screen_width - 160)) + 96;
     Vector2 mousePoint = { 0.0f, 0.0f };
-    InitWindow(screen_width, screen_height, "auto_chess");
 
-    Rectangle panelRec = { 0, header_offset, screen_width, screen_height - header_offset };
+    Rectangle panelRec = { 0, header_offset, (float) screen_width, screen_height - header_offset };
     Rectangle panelContentRec = { 0, header_offset, 1080, 2880 };
     Vector2 panelScroll = { 99, -20 };
 
-    gui_dropdown    drop_downs[2];
-    int     resolution_chosen[2] = { 0, 0 };
-    bool    resolution_edit_mode[2] = { false, false };
+    gui_dropdown    dropdowns[2];
+    gui_base        labels[5];
+    gui_slider      slider;
+    gui_checkbox    checkboxes[2];
+    gui_button      buttons[2];
+    for (int i = 0; i < 2; i++)
+    {
+        dropdowns[i].set_bounds((screen_width - settings_width)/2, (screen_height - settings_height)/2, i, 2);
+        dropdowns[i].set_text(i, 1);
+    }
+    for (int i = 0; i < 5; i++)
+    {
+        labels[i].set_bounds((screen_width - settings_width)/2, (screen_height - settings_height)/2, i, 0);
+        labels[i].set_text(i, 0);
+    }
+    slider.set_bounds((screen_width - settings_width)/2, (screen_height - settings_height)/2, 0, 1);
+    slider.value_init(50, 0, 100);
+    for (int i = 0; i < 2; i++)
+        checkboxes[i].set_bounds((screen_width - settings_width)/2, (screen_height - settings_height)/2, i, 3);
+    for (int i = 0; i < 2; i++)
+    {
+        buttons[i].set_bounds((screen_width - settings_width)/2, (screen_height - settings_height)/2, i, 4);
+        buttons[i].set_text(i, 2);
+    }
 
     btn_menu = initialise_menu(&unique_id, 64);
     SetTargetFPS(60);
     while (!WindowShouldClose())
     {
         mousePoint = GetMousePosition();
-
         frame_count++;
         switch(current_state)
         {
@@ -55,23 +85,62 @@ int main(void)
                 else if (current_state == SETTINGS)
                 {
                     unload_sprite(&btn_menu, MENU_BUTTONS);
-                    btn_menu = initialise_settings(&unique_id, 32, screen_width, screen_height);
-                    drop_downs[0].set_dropdown_bounds((screen_width - 960)/2, (screen_height - 540)/2, 0);
-                    drop_downs[0].set_name(0);
-                    // drop_downs[1].set_dropdown_bounds((screen_width - 960)/2, (screen_height - 540)/2, 1);
-                    // drop_downs[1].set_name(0);
+                    dim_stop = frame_count + 16;
                 }
                 else if (current_state == DRAFT)
                     unload_sprite(&btn_menu, MENU_BUTTONS);
             } break;
             case SETTINGS:
             {
-                current_state = check_settings(btn_menu, mousePoint);
-                if (CheckCollisionPointRec(mousePoint, drop_downs[0].bounds) && IsGestureDetected(GESTURE_TAP))
-                    resolution_edit_mode[0] = !resolution_edit_mode[0];
+                if (buttons[0].get_checked())
+                    current_state = buttons[0].get_destination();
+                if (buttons[1].get_checked())
+                {
+                    if (checkboxes[0].get_checked() && !IsWindowFullscreen())
+                    {
+                        screen_width = max_width;
+                        screen_height = max_height;
+                        SetWindowSize(screen_width, screen_height);
+                        ToggleFullscreen();
+                    }
+                    else if (!checkboxes[0].get_checked() && IsWindowFullscreen())
+                    {
+                        printf("This happens\n");
+                        ToggleFullscreen();
+                        screen_width = default_width;
+                        screen_height = default_height;
+                        SetWindowSize(screen_width, screen_height);
+                    }
+                }
+                // if (buttons[1].get_checked() && checkboxes[0].get_checked() && !IsWindowFullscreen())
+                // {
+                //     screen_width = max_width;
+                //     screen_height = max_height;
+                //     SetWindowSize(screen_width, screen_height);
+                //     ToggleFullscreen();
+                // }
+                // if (buttons[1].get_checked() && !(checkboxes[0].get_checked()) && IsWindowFullscreen())
+                // {
+                //     printf("This happens\n");
+                //     ToggleFullscreen();
+                //     screen_width = default_width;
+                //     screen_height = default_height;
+                //     SetWindowSize(screen_width, screen_height);
+                // }
+                for (int i = 0; i < 2; i++)
+                {
+                    if (CheckCollisionPointRec(mousePoint, dropdowns[i].get_bounds()) && IsGestureDetected(GESTURE_TAP))
+                        dropdowns[i].toggle_edit_mode();
+                }
                 if (current_state == MENU)
                 {
-                    unload_sprite(&btn_menu, SETTINGS_BUTTONS);
+                    // for (int i = 0; i < 2; i++)
+                    //     dropdowns[i].free_text();
+                    // for (int i = 0; i < 5; i++)
+                    //     labels[i].free_text();
+                    // slider.free_text();
+                    // for (int i = 0; i < 2; i++)
+                    //     buttons[i].free_text();
                     btn_menu = initialise_menu(&unique_id, 64);
                 }
             } break;
@@ -115,8 +184,18 @@ int main(void)
                 } break;
                 case SETTINGS:
                 {
-                    draw_settings(btn_menu, screen_width, screen_height);
-                    GuiDropdownBox(drop_downs[0].bounds, drop_downs[0].names, &resolution_chosen[0], resolution_edit_mode[0]);
+                    DrawRectangle((screen_width - settings_width)/2, (screen_height - settings_height)/2, settings_width, settings_height, RAYWHITE);
+                    if (frame_count < dim_stop)
+                        DrawRectangle(0, 0, screen_width, screen_height, (Color) { 0, 0, 0, 30 });
+                    for (int i = 0; i < 2; i++)
+                        GuiDropdownBox(dropdowns[i].get_bounds(), dropdowns[i].get_text(), &(dropdowns[i].choice), dropdowns[i].edit_mode);
+                    for (int i = 0; i < 5; i++)
+                        DrawText(labels[i].get_text(), labels[i].get_bounds().x, labels[i].get_bounds().y, 32, DARKGRAY);
+                    slider.set_value(GuiSliderBar(slider.get_bounds(), NULL, NULL, slider.get_value(), slider.get_min(), slider.get_max()));
+                    for (int i = 0; i < 2; i++)
+                        checkboxes[i].set_checked(GuiCheckBox(checkboxes[i].get_bounds(), checkboxes[i].get_text(), checkboxes[i].get_checked()));
+                    for (int i = 0; i < 2; i++)
+                        buttons[i].set_checked(GuiButton(buttons[i].get_bounds(), buttons[i].get_text()));
                 } break;
                 case DRAFT:
                 {
@@ -143,6 +222,13 @@ int main(void)
             }
         EndDrawing();
     }
+    for (int i = 0; i < 2; i++)
+        dropdowns[i].free_text();
+    for (int i = 0; i < 5; i++)
+        labels[i].free_text();
+    slider.free_text();
+    for (int i = 0; i < 2; i++)
+        buttons[i].free_text();
     CloseWindow();
     return (0);
 }

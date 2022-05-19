@@ -10,34 +10,32 @@
 
 # define SETTINGS_BUTTONS 2
 
-class gui_dropdown
+class gui_base
 {
+protected:
+    char        *text = NULL;
 private:
-    const char  *i_to_c[4] = {"0", "1", "2", "3"};
-public:
+    const char  *i_to_c[6] = {"0", "1", "2", "3", "4", "5"};
+    const char  *bound_modes[5] = {"LabelBounds", "SliderBounds", "DropdownBounds", "CheckBoxBounds", "ButtonBounds"};
+    const char  *text_modes[3] = {"LabelText", "DropdownText", "ButtonText"};
     Rectangle   bounds;
-    char        *names;
-    void        set_dropdown_bounds(int offset_x, int offset_y, int id)
+public:
+    void        set_bounds(int offset_x, int offset_y, int id, int mode)
     {
         mINI::INIFile file ("data/settings_gui.ini");
         mINI::INIStructure ini;
         float param[4];
         int i;
+        char    str[16];
+        int from = 0;
+        int to = 0;
 
         file.read(ini);
         i = 0;
+        strlcpy(str, ini.get(bound_modes[mode]).get(i_to_c[id]).c_str(), 16);
         while (i < 4)
         {
             param[i] = 0;
-            i++;
-        }
-        i = 0;
-        char    str[16];
-        memcpy(str, ini.get("DropdownBounds").get(i_to_c[id]).c_str(), 16);
-        int from = 0;
-        int to = 0;
-        while (i < 4)
-        {
             to = from;
             while (str[to] != ',' && str[to] != '\0')
                 to++;
@@ -52,18 +50,90 @@ public:
         }
         bounds = (Rectangle) { param[0] + offset_x, param[1] + offset_y, param[2], param[3] };
     }
-    void    set_name(char id)
+    void        set_text(int id, int mode)
     {
-        char                *ptr;
-        size_t              len;
         mINI::INIFile       file ("data/settings_gui.ini");
         mINI::INIStructure  ini;
+        char                *ptr;
+        size_t              len;
 
         file.read(ini);
-        len = ini.get("DropdownText").get(&id).size();
+        len = ini.get(text_modes[mode]).get(i_to_c[id]).size();
         ptr = (char *) malloc (sizeof(char) * len);
-        strlcpy(ptr, ini.get("DropdownText").get(&id).c_str(), len + 1);
-        names = ptr;
+        strlcpy(ptr, ini.get(text_modes[mode]).get(i_to_c[id]).c_str(), len + 1);
+        text = ptr;
+    }
+    void        free_text(void) 
+    {
+        if (text)
+        {
+            free(text);
+            text = NULL;
+        }
+    }
+    Rectangle   get_bounds(void) { return (bounds); }
+    char        *get_text(void) { return (text); }
+};
+
+class gui_dropdown : public gui_base
+{
+public:
+    int     choice = 0;
+    bool    edit_mode = false;
+    void    toggle_edit_mode(void) { edit_mode = !edit_mode; }
+};
+
+class gui_slider : public gui_base
+{
+private:
+    char    *text_right = NULL;
+    float   value = 0;
+    float   min = 0;
+    float   max = 100;
+public:
+    char        *get_text(int side) 
+    { 
+        if (side == 1)
+            return (text_right);
+        return (text);
+    }
+    void        value_init(float _value, float _min, float _max)
+    {
+        value = _value;
+        min = _min;
+        max = _max;
+    }
+    void        set_value(float _value) { value = _value; }
+    float       get_value(void) { return (value); }
+    float       get_min(void) { return (min); }
+    float       get_max(void) { return (max); }
+};
+
+class gui_checkbox : public gui_base
+{
+protected:
+    bool    checked = false;
+public:
+    // void    toggle_checked(void) { checked = !checked; }
+    void    set_checked(bool _checked) { checked = _checked; }
+    bool    get_checked(void) { return (checked); }
+};
+
+class gui_button : public gui_checkbox
+{
+private:
+    game_state  destination = MENU;
+public:
+    game_state  get_destination(void) { return (destination); }
+    void        set_destination(game_state to) { destination = to; }
+    bool        get_checked(void)
+    {
+        if (checked)
+        {
+            checked = false;
+            return (true);
+        }
+        return (checked);
     }
 };
 

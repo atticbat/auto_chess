@@ -34,7 +34,6 @@ class sprite
         }
         int         get_unique_id (void) { return (unique_id); }
         int         get_sprite_id (void) { return (sprite_id); }
-        // void        destroy (void) { delete this; }
 };
 
 void    button_status_check(sprite *btn, Vector2 mousePoint);

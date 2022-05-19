@@ -29,9 +29,9 @@ void    draw_settings(sprite *btn, int screen_width, int screen_height)
     int offset_top;
 
     i = 0;
-    offset_left = ((screen_width - 960) / 2); 
-    offset_top = ((screen_height - 540) / 2);
-    DrawRectangle(offset_left, offset_top, 960, 540, LIGHTGRAY);
+    // offset_left = ((screen_width - 960) / 2); 
+    // offset_top = ((screen_height - 540) / 2);
+    // DrawRectangle(offset_left, offset_top, 960, 540, RAYWHITE);
     while (i < SETTINGS_BUTTONS)
     {
         DrawTextureRec(btn[i].image, btn[i].source, (Vector2){ btn[i].hitbox.x, btn[i].hitbox.y }, WHITE);
