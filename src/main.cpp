@@ -4,9 +4,118 @@
 #include "../raylib-cpp/include/raygui.h"
 #include <stdlib.h>
 #include <stdio.h>
-// #ifndef PLATFORM_DESKTOP
-// # define PLATFORM_DESKTOP 1
-// #endif
+
+static gui_base **initialise_settings(void)
+{
+    gui_base        **settings_gui;
+    gui_base        **ptr;
+
+    settings_gui = (gui_base **) malloc (sizeof(gui_base *) * 12);
+    ptr = settings_gui;
+    for (int i = 0; i < 5; i++)
+    {
+        gui_base    *label = new gui_base;
+        label->set_text(i, 0);
+        *ptr = label;
+        ptr++;
+    }
+    for (int i = 0; i < 2; i++)
+    {
+        *ptr = new gui_checkbox;
+        ptr++;
+    }
+    for (int i = 0; i < 2; i++)
+    {
+        gui_button  *button = new gui_button;
+        button->set_text(i, 2);
+        *ptr = button;
+        ptr++;
+    }
+    {
+        *ptr = new gui_slider;
+        gui_slider  *temp = dynamic_cast<gui_slider *> (*ptr);
+        temp->value_init(50, 0, 100);
+        ptr++;
+    }
+    for (int i = 0; i < 2; i++)
+    {
+        gui_dropdown    *dropdown =  new gui_dropdown;
+        dropdown->set_text(i, 1);
+        *ptr = dropdown;
+        if (i == 0)
+            ptr++;
+    }
+    return (settings_gui);
+}
+
+static bool check_checkbox(gui_base *gui)
+{
+    gui_checkbox *checkbox = dynamic_cast<gui_checkbox *> (gui);
+
+    if (checkbox)
+        return (checkbox->get_checked());
+    return (false);
+}
+
+static bool check_button_press(gui_base *gui)
+{
+    gui_button *button = dynamic_cast<gui_button *> (gui);
+
+    if (button)
+        return (button->get_checked());
+    return (false);
+}
+
+static game_state   check_button_destination(gui_base *gui)
+{
+    gui_button *button = dynamic_cast<gui_button *> (gui);
+
+    if (button)
+        return (button->get_destination());
+    return (MENU);
+}
+
+static void set_gui_boundaries(gui_base **settings_gui, int screen_width, int screen_height, int settings_width, int settings_height)
+{
+    for (int i = 0; i < 5; i++)
+        settings_gui[i]->set_bounds((screen_width - settings_width)/2, (screen_height - settings_height)/2, i, 0);
+    for (int i = 5; i < 7; i++)
+        settings_gui[i]->set_bounds((screen_width - settings_width)/2, (screen_height - settings_height)/2, i - 5, 3);
+    for (int i = 7; i < 9; i++)
+        settings_gui[i]->set_bounds((screen_width - settings_width)/2, (screen_height - settings_height)/2, i - 7, 4);
+    settings_gui[9]->set_bounds((screen_width - settings_width)/2, (screen_height - settings_height)/2, 0, 1);
+    for (int i = 10; i < 12; i++)
+        settings_gui[i]->set_bounds((screen_width - settings_width)/2, (screen_height - settings_height)/2, i - 10, 2);
+}
+
+static void draw_gui(gui_base **settings_gui)
+{
+    for (int i = 0; i < 5; i++)
+        DrawText(settings_gui[i]->get_text(), settings_gui[i]->get_bounds().x, settings_gui[i]->get_bounds().y, 32, DARKGRAY);
+    for (int i = 5; i < 7; i++)
+    {
+        gui_checkbox    *temp = dynamic_cast<gui_checkbox *> (settings_gui[i]);
+        if (temp)
+            temp->set_checked(GuiCheckBox(temp->get_bounds(), temp->get_text(), temp->get_checked()));
+    }
+    for (int i = 7; i < 9; i++)
+    {
+        gui_button  *temp = dynamic_cast<gui_button *> (settings_gui[i]);
+        if (temp)
+            temp->set_checked(GuiButton(temp->get_bounds(), temp->get_text())); 
+    }
+    {
+        gui_slider  *temp = dynamic_cast<gui_slider *> (settings_gui[9]);
+        if (temp)
+            temp->set_value(GuiSliderBar(temp->get_bounds(), NULL, NULL, temp->get_value(), temp->get_min(), temp->get_max()));
+    }
+    for (int i = 10; i < 12; i++)
+    {
+        gui_dropdown    *temp = dynamic_cast<gui_dropdown *> (settings_gui[i]);
+        if (temp)
+            GuiDropdownBox(temp->get_bounds(), temp->get_text(), &(temp->choice), temp->get_edit_mode());
+    }
+}
 
 int main(void)
 {
@@ -19,7 +128,6 @@ int main(void)
     input_box   *in_db;
     int dim_stop = 0;
     
-    SetConfigFlags(FLAG_VSYNC_HINT);
     InitWindow(0, 0, "Auto Chess");
     const int   max_width = GetScreenWidth();
     const int   max_height = GetScreenHeight();
@@ -35,30 +143,7 @@ int main(void)
     Rectangle panelContentRec = { 0, header_offset, 1080, 2880 };
     Vector2 panelScroll = { 99, -20 };
 
-    gui_dropdown    dropdowns[2];
-    gui_base        labels[5];
-    gui_slider      slider;
-    gui_checkbox    checkboxes[2];
-    gui_button      buttons[2];
-    for (int i = 0; i < 2; i++)
-    {
-        dropdowns[i].set_bounds((screen_width - settings_width)/2, (screen_height - settings_height)/2, i, 2);
-        dropdowns[i].set_text(i, 1);
-    }
-    for (int i = 0; i < 5; i++)
-    {
-        labels[i].set_bounds((screen_width - settings_width)/2, (screen_height - settings_height)/2, i, 0);
-        labels[i].set_text(i, 0);
-    }
-    slider.set_bounds((screen_width - settings_width)/2, (screen_height - settings_height)/2, 0, 1);
-    slider.value_init(50, 0, 100);
-    for (int i = 0; i < 2; i++)
-        checkboxes[i].set_bounds((screen_width - settings_width)/2, (screen_height - settings_height)/2, i, 3);
-    for (int i = 0; i < 2; i++)
-    {
-        buttons[i].set_bounds((screen_width - settings_width)/2, (screen_height - settings_height)/2, i, 4);
-        buttons[i].set_text(i, 2);
-    }
+    gui_base        **settings_gui = initialise_settings();
 
     btn_menu = initialise_menu(&unique_id, 64);
     SetTargetFPS(60);
@@ -84,65 +169,46 @@ int main(void)
                 }
                 else if (current_state == SETTINGS)
                 {
+                    set_gui_boundaries(settings_gui, screen_width, screen_height, settings_width, settings_height);
                     unload_sprite(&btn_menu, MENU_BUTTONS);
-                    dim_stop = frame_count + 16;
                 }
                 else if (current_state == DRAFT)
                     unload_sprite(&btn_menu, MENU_BUTTONS);
             } break;
             case SETTINGS:
             {
-                if (buttons[0].get_checked())
-                    current_state = buttons[0].get_destination();
-                if (buttons[1].get_checked())
+                if (check_button_press(settings_gui[7]))
+                    current_state = check_button_destination(settings_gui[7]);
+                if (check_button_press(settings_gui[8]))
                 {
-                    if (checkboxes[0].get_checked() && !IsWindowFullscreen())
+                    if (check_checkbox(settings_gui[5]) && !IsWindowFullscreen())
                     {
                         screen_width = max_width;
                         screen_height = max_height;
                         SetWindowSize(screen_width, screen_height);
                         ToggleFullscreen();
+                        set_gui_boundaries(settings_gui, screen_width, screen_height, settings_width, settings_height);
                     }
-                    else if (!checkboxes[0].get_checked() && IsWindowFullscreen())
+                    else if (!check_checkbox(settings_gui[5]) && IsWindowFullscreen())
                     {
-                        printf("This happens\n");
                         ToggleFullscreen();
                         screen_width = default_width;
                         screen_height = default_height;
                         SetWindowSize(screen_width, screen_height);
+                        set_gui_boundaries(settings_gui, screen_width, screen_height, settings_width, settings_height);
                     }
                 }
-                // if (buttons[1].get_checked() && checkboxes[0].get_checked() && !IsWindowFullscreen())
-                // {
-                //     screen_width = max_width;
-                //     screen_height = max_height;
-                //     SetWindowSize(screen_width, screen_height);
-                //     ToggleFullscreen();
-                // }
-                // if (buttons[1].get_checked() && !(checkboxes[0].get_checked()) && IsWindowFullscreen())
-                // {
-                //     printf("This happens\n");
-                //     ToggleFullscreen();
-                //     screen_width = default_width;
-                //     screen_height = default_height;
-                //     SetWindowSize(screen_width, screen_height);
-                // }
-                for (int i = 0; i < 2; i++)
+                for (int i = 10; i < 12; i++)
                 {
-                    if (CheckCollisionPointRec(mousePoint, dropdowns[i].get_bounds()) && IsGestureDetected(GESTURE_TAP))
-                        dropdowns[i].toggle_edit_mode();
+                    gui_dropdown    *temp = dynamic_cast<gui_dropdown *> (settings_gui[i]);
+                    if (temp)
+                    {
+                        if (CheckCollisionPointRec(mousePoint, temp->get_bounds()) && IsGestureDetected(GESTURE_TAP))
+                            temp->toggle_edit_mode();
+                    }
                 }
                 if (current_state == MENU)
-                {
-                    // for (int i = 0; i < 2; i++)
-                    //     dropdowns[i].free_text();
-                    // for (int i = 0; i < 5; i++)
-                    //     labels[i].free_text();
-                    // slider.free_text();
-                    // for (int i = 0; i < 2; i++)
-                    //     buttons[i].free_text();
                     btn_menu = initialise_menu(&unique_id, 64);
-                }
             } break;
             case DRAFT:
             {
@@ -184,18 +250,9 @@ int main(void)
                 } break;
                 case SETTINGS:
                 {
+                    ClearBackground(DARKBROWN);
                     DrawRectangle((screen_width - settings_width)/2, (screen_height - settings_height)/2, settings_width, settings_height, RAYWHITE);
-                    if (frame_count < dim_stop)
-                        DrawRectangle(0, 0, screen_width, screen_height, (Color) { 0, 0, 0, 30 });
-                    for (int i = 0; i < 2; i++)
-                        GuiDropdownBox(dropdowns[i].get_bounds(), dropdowns[i].get_text(), &(dropdowns[i].choice), dropdowns[i].edit_mode);
-                    for (int i = 0; i < 5; i++)
-                        DrawText(labels[i].get_text(), labels[i].get_bounds().x, labels[i].get_bounds().y, 32, DARKGRAY);
-                    slider.set_value(GuiSliderBar(slider.get_bounds(), NULL, NULL, slider.get_value(), slider.get_min(), slider.get_max()));
-                    for (int i = 0; i < 2; i++)
-                        checkboxes[i].set_checked(GuiCheckBox(checkboxes[i].get_bounds(), checkboxes[i].get_text(), checkboxes[i].get_checked()));
-                    for (int i = 0; i < 2; i++)
-                        buttons[i].set_checked(GuiButton(buttons[i].get_bounds(), buttons[i].get_text()));
+                    draw_gui(settings_gui);
                 } break;
                 case DRAFT:
                 {
@@ -222,13 +279,8 @@ int main(void)
             }
         EndDrawing();
     }
-    for (int i = 0; i < 2; i++)
-        dropdowns[i].free_text();
-    for (int i = 0; i < 5; i++)
-        labels[i].free_text();
-    slider.free_text();
-    for (int i = 0; i < 2; i++)
-        buttons[i].free_text();
+    for (int i = 0; i < 12; i++)
+        settings_gui[i]->free_text();
     CloseWindow();
     return (0);
 }
