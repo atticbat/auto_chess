@@ -15,5 +15,7 @@
 # include "menu.hpp"
 # include "database.hpp"
 # include "settings.hpp"
+# include "gui.hpp"
+# include "game_progression.hpp"
 
 #endif

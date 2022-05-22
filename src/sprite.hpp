@@ -3,8 +3,7 @@
 
 # include "../raylib-cpp/include/raylib-cpp.hpp"
 # include "../config.hpp"
-
-typedef enum    game_state{LOADING = 0, MENU, SETTINGS, DRAFT, SIMULATION, DATABASE} game_state;
+# include "game_progression.hpp"
 
 class sprite
 {

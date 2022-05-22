@@ -1,67 +1,56 @@
 #include "menu.hpp"
 
-const char  *menu_paths[5] = {"resources/new_game.png", "resources/load.png", "resources/settings.png", "resources/exit.png", "resources/database.png"};
-
-sprite  *initialise_menu(int *unique_id, int offset)
+void draw_menu_gui(gui_base **menu_gui)
 {
-    sprite  *btn;
-    int i;
-
-    i = 0;
-    btn = (sprite *) malloc (sizeof(sprite) * MENU_BUTTONS);
-    while (i < MENU_BUTTONS)
+    for (int i = 0; i < 5; i++)
     {
-        btn[i].initialise(*unique_id, (char *) menu_paths[i], 3, offset, offset * i + offset);
-        *unique_id = *unique_id + 1;
-        i++;
+        gui_button  *temp = dynamic_cast<gui_button *> (menu_gui[i]);
+        if (temp)
+            temp->set_checked(GuiButton(temp->get_bounds(), temp->get_text())); 
     }
-    return (btn);
 }
 
-void    draw_menu(sprite *btn, int screen_width, int screen_height)
+void set_menu_boundaries(gui_base **menu_gui)
 {
-    int i;
+    mINI::INIFile   file("data/menu_gui.ini");
+    const char      *bound_modes[2] = { "ButtonBounds", "dummy" };
 
-    i = 0;
-    ClearBackground(RAYWHITE);
-    DrawRectangle(0, 0, screen_width, screen_height, SKYBLUE);
-    while (i < MENU_BUTTONS)
+    for (int i = 0; i < 5; i++)
     {
-        DrawTextureRec(btn[i].image, btn[i].source, (Vector2){ btn[i].hitbox.x, btn[i].hitbox.y }, WHITE);
-        i++;
+        menu_gui[i]->set_bounds(0, 0, i, bound_modes[0], file);
+        printf("Rectangle: x: %f, y: d, width: d, height: d\n", menu_gui[i]->get_bounds().x);
     }
-    DrawText("MENU", 200, 64, 20, DARKBLUE);
-    DrawText("CHOOSE AN OPTION to CONTINUE", 200, 96, 20, DARKBLUE);
 }
 
-game_state  check_menu(sprite *btn, Vector2 mousePoint)
+game_state   parse_destination(int id)
 {
-    int i;
+    mINI::INIFile       file ("data/menu_gui.ini");
+    mINI::INIStructure  ini;
+    char                c[2];
 
-    i = 0;
-    while (i < MENU_BUTTONS)
-    {
-        button_status_check(&btn[i], mousePoint);
-        i++;
-    }
-    if (btn[0].trigger == true)
-        return (DRAFT);
-    else if (btn[2].trigger == true)
-        return (SETTINGS);
-    else if (btn[4].trigger == true)
-        return (DATABASE);
-    else
-        return (MENU);
+    c[0] = '0' + id;
+    c[1] = '\0';
+    file.read(ini);
+    return (static_cast <game_state>(atoi(ini.get("ButtonDestination").get(c).c_str())));
 }
 
-void    unload_menu(sprite *btn)
+gui_base    **initialise_menu(void)
 {
-    int i;
+    mINI::INIFile   file("data/menu_gui.ini");
+    gui_base        **menu_gui;
+    gui_base        **ptr;
+    const char      *text_modes[2] = { "ButtonText", "dummy" };
 
-    i = 0;
-    while (i < MENU_BUTTONS)
+    menu_gui = (gui_base **) malloc (sizeof(gui_base *) * 5);
+    ptr = menu_gui;
+    for (int i = 0; i < 5; i++)
     {
-        UnloadTexture(btn[i].image);
-        i++;
+        gui_button  *button = new gui_button;
+        button->set_text(i, (const char *) text_modes[0], file);
+        button->set_destination(parse_destination(i));
+        *ptr = button;
+        if (i < 4)
+            ptr++;
     }
+    return (menu_gui);
 }

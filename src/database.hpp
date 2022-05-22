@@ -1,19 +1,17 @@
 #ifndef DATABASE_HPP
 # define DATABASE_HPP
 
-# include "sprite.hpp"
-# include "input_box.hpp"
 # include "../raylib-cpp/include/ini.h"
+# include "gui.hpp"
 
 # define DATABASE_BUTTONS 2
 # define DATABASE_INPUTS 13
 # define MAX_UNITS 128
 
-sprite      *initialise_db(int *unique_id, int offset, int screen_width, int screen_height);
-game_state  check_database(sprite *btn, input_box *in_db, Vector2 mousePoint, int *frame_count);
-void        draw_database(sprite *btn, input_box *in_db, int screen_width, int screen_height, int frame_count);
-input_box   *initialise_db_in(int screen_width);
+gui_base    **initialise_database(void);
+game_state  check_database(gui_base **db_gui, Vector2 mousePoint, int *frame_count);
+void        draw_database(gui_base **db_gui, int screen_width, int screen_height, int frame_count);
 void        draw_grid(int screen_h_offset, int screen_v_offset);
-void        ft_itoa(int num, char *buffer);
+void        set_database_boundaries(gui_base **settings_gui, int screen_width, int screen_height);
 
 #endif

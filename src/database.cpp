@@ -8,10 +8,7 @@
 #include <fstream>
 
 int         atoi(const char *str);
-const char  *db_names[13] = {"ID", "Cost", "Tag 1", "Tag 2", "Tag 3", "Attack", "Health", "AtkSpd", "AblPwr", "Defense", "Range", "AblCost", "Gauge"};
-const char  *db_paths[2] = {"resources/edit_item.png", "resources/return.png"};
 char        unit_db[MAX_UNITS][52];
-const int   db_max_input[13] = {3, 1, 2, 2, 2, 4, 5, 4, 4, 4, 1, 4, 4};
 
 static void initialise_unit_db(void)
 {
@@ -30,88 +27,82 @@ static void initialise_unit_db(void)
     }
 }
 
-sprite  *initialise_db(int *unique_id, int offset, int screen_width, int screen_height)
+void    set_database_boundaries(gui_base **settings_gui, int screen_width, int screen_height)
 {
-    sprite  *btn;
-    int     i;
-    int     divided;
-    int     remainder;
+    mINI::INIFile   file("data/database_gui.ini");
+    const char  *bound_modes[3] = {"LabelBounds", "TextboxBounds", "ButtonBounds"};
+    const float header_offset = 64 * (((DATABASE_INPUTS) * 160) / (screen_width - 160)) + 96;
 
-    i = 0;
-    btn = (sprite *) malloc (sizeof(sprite) * DATABASE_BUTTONS);
-    while (i < DATABASE_BUTTONS)
+    for (int i = 0; i < 13; i++)
     {
-        divided = ((DATABASE_INPUTS + i) * 160) % (screen_width - 160) + 64;
-        remainder = 64 * (((DATABASE_INPUTS + i) * 160) / (screen_width - 160)) + 32;
-        btn[i].initialise(*unique_id, (char *) db_paths[i], 3, divided, remainder);
-        *unique_id = *unique_id + 1;
-        i++;
+        int divided = ((i * 160) % (screen_width - 160)) + 64;
+        int remainder = 64 * ((i * 160) / (screen_width - 160)) + 32;
+        settings_gui[i]->set_bounds(divided, remainder, i, bound_modes[0], file);
+        settings_gui[i + 13]->set_bounds(divided, remainder, i, bound_modes[1], file);
     }
+    for (int i = 26; i < 28; i++)
+    {
+        int divided = (((i - 13) * 160) % (screen_width - 160)) + 64;
+        int remainder = 64 * (((i - 13) * 160) / (screen_width - 160)) + 32;
+        settings_gui[i]->set_bounds(divided, remainder, i - 26, bound_modes[2], file);
+    }
+    {
+        gui_scrollbar   *scrollbar = dynamic_cast <gui_scrollbar *> (settings_gui[28]);
+        scrollbar->set_bounds(0, header_offset, (float) screen_width, screen_height - header_offset);
+        scrollbar->set_content(0, header_offset, 1080, 2880);
+    }
+}
+
+gui_base    **initialise_database(void)
+{
+    gui_base        **database_gui;
+    gui_base        **ptr;
+    mINI::INIFile   file ("data/database_gui.ini");
+    const char      *text_modes[2] = {"LabelText", "ButtonText"};
+    const int       db_max_input[13] = {3, 1, 2, 2, 2, 4, 5, 4, 4, 4, 1, 4, 4};
+
     initialise_unit_db();
-    return (btn);
-}
-
-static void input_status_check(input_box *in, Vector2 mousePoint, int *frame_count)
-{
-    if (CheckCollisionPointRec(mousePoint, in->box))
-        in->on_text = true;
-    else
-        in->on_text = false;
-    if (in->on_text)
+    database_gui = (gui_base **) malloc (sizeof(gui_base *) * 29);
+    ptr = database_gui;
+    for (int i = 0; i < 13; i++)
     {
-        SetMouseCursor(MOUSE_CURSOR_IBEAM);
-        int key = GetCharPressed();
-        while (key > 0)
-        {
-            if ((key >= 48) && (key <= 57) && (in->check_if_max()))
-            {
-                (in->input)[in->count] = (char)key;
-                (in->input)[in->count + 1] = '\0';
-                (in->count)++;
-            }
-            key = GetCharPressed();
-        }
-        if (IsKeyPressed(KEY_BACKSPACE))
-        {
-            (in->count)--;
-            if (in->count < 0)
-                in->count = 0;
-            (in->input)[in->count] = '\0';
-        }
+        gui_base    *label = new gui_base;
+        label->set_text(i, text_modes[0], file);;
+        *ptr = label;
+        ptr++;
     }
-    if (in->on_text)
-        (*frame_count)++;
-    else
-        *frame_count = 0;
-}
-
-static void input_status_visual(input_box *in, int frame_count)
-{
-    DrawRectangleRec(in->box, LIGHTGRAY);
-    if (in->on_text)
-        DrawRectangleLines((int)(in->box).x, (int)(in->box).y, (int)(in->box).width, (int)(in->box).height, RED);
-    else
-        DrawRectangleLines((int)(in->box).x, (int)(in->box).y, (int)(in->box).width, (int)(in->box).height, DARKGRAY);
-    DrawText(in->input, (int)(in->box).x + 5, (int) (in->box).y + 8, 32, MAROON);
-    if (in->on_text)
+    for (int i = 13; i < 26; i++)
     {
-        if (in->count < MAX_INPUT_CHARS)
-        {
-            if (((frame_count/60)%2) == 0)
-                DrawText("_", (int) (in->box).x + 8 + MeasureText(in->input, 32), (int)(in->box).y + 12, 32, MAROON);
-            else
-                DrawText ("Press BACKSPACE to delete chars...", 230, 300, 20, DARKGREEN);
-        }
+        gui_textbox    *textbox = new gui_textbox;
+        textbox->set_max_input(db_max_input[i - 13]);
+        *ptr = textbox;
+        ptr++;
     }
+    for (int i = 26; i < 28; i++)
+    {
+        gui_button    *button = new gui_button;
+        button->set_text(i - 26, text_modes[1], file);
+        *ptr = button;
+        ptr++;
+    }
+    {
+        gui_scrollbar   *scrollbar =  new gui_scrollbar;
+        *ptr = scrollbar;
+    }
+    return(database_gui);
 }
 
-static void write_unit_db(input_box *in_db)
+static void write_unit_db(gui_base **db_gui)
 {
     FILE *read_txt;
-    int id;
+    int id = 0;
     int i;
 
-    id = atoi(in_db[0].input);
+    {
+        gui_textbox  *textbox = dynamic_cast <gui_textbox *> (db_gui[13]);
+        if (textbox)
+            id = atoi(textbox->get_text());
+    }
     read_txt = fopen("arrays/unit_database.txt", "w+");
     i = 0;
     while (i < id)
@@ -123,7 +114,7 @@ static void write_unit_db(input_box *in_db)
     int j = 0;
     while (j < DATABASE_INPUTS)
     {
-        fprintf(read_txt, in_db[j].input);
+        fprintf(read_txt, db_gui[j + 13]->get_text());
         if (j < 12)
             fprintf(read_txt, ",");
         j++;
@@ -140,34 +131,84 @@ static void write_unit_db(input_box *in_db)
     fclose(read_txt);
 }
 
-game_state  check_database(sprite *btn, input_box *in_db, Vector2 mousePoint, int *frame_count)
+static void input_status_check(gui_textbox *textbox, Vector2 mousePoint, int *frame_count)
+{
+    if (CheckCollisionPointRec(mousePoint, textbox->get_bounds()))
+        textbox->set_edit_mode(true);
+    else
+        textbox->set_edit_mode(false);
+    if (textbox->get_edit_mode())
+    {
+        SetMouseCursor(MOUSE_CURSOR_IBEAM);
+        int key = GetCharPressed();
+        while (key > 0)
+        {
+            if ((key >= 48) && (key <= 57))
+                textbox->add_letter(key);
+            key = GetCharPressed();
+        }
+        if (IsKeyPressed(KEY_BACKSPACE))
+            textbox->delete_letter();
+    }
+    if (textbox->get_edit_mode())
+        (*frame_count)++;
+    else
+        *frame_count = 0;
+}
+
+static void input_status_visual(gui_textbox *textbox, int frame_count)
+{
+    Rectangle   bounds = textbox->get_bounds();
+    DrawRectangleRec(textbox->get_bounds(), LIGHTGRAY);
+    if (textbox->get_edit_mode())
+        DrawRectangleLines(bounds.x, bounds.y, bounds.width, bounds.height, BLACK);
+    else
+        DrawRectangleLines(bounds.x, bounds.y, bounds.width, bounds.height, DARKGRAY);
+    DrawText(textbox->get_text(), bounds.x + 4, bounds.y + 8, 24, BLACK);
+    if (textbox->get_edit_mode())
+    {
+        if (((frame_count/60)%2) == 0)
+            DrawText("_", (int) bounds.x + 8 + MeasureText(textbox->get_text(), 24), (int) bounds.y + 8, 24, BLACK);
+    }
+}
+
+static bool check_not_empty(gui_base **db_gui)
+{
+    for (int i = 13; i < 26; i++)
+    {
+        gui_textbox *textbox = dynamic_cast<gui_textbox *> (db_gui[i]);
+        if (textbox)
+        {
+            if (textbox->get_text()[0] == '\0')
+                return (0);
+        }
+    }
+    return (1);
+}
+
+game_state  check_database(gui_base **db_gui, Vector2 mousePoint, int *frame_count)
 {
     bool    no_hover;
-    int     i;
 
     no_hover = true;
-    i = 0;
-    while (i < 13)
+    for (int i = 13; i < 26; i++)
     {
-        input_status_check(&in_db[i], mousePoint, frame_count);
-        i++;
-        if (in_db[i].on_text == true)
+        gui_textbox *textbox = dynamic_cast<gui_textbox *> (db_gui[i]);
+        input_status_check(textbox, mousePoint, frame_count);
+        if (textbox->get_edit_mode())
             no_hover = false;
     }
     if  (no_hover)
         SetMouseCursor(MOUSE_CURSOR_DEFAULT);
-    i = 0;
-    while (i < DATABASE_BUTTONS)
+    if (check_button_press(db_gui[26]))
     {
-        button_status_check(&btn[i], mousePoint);
-        i++;
+        if (check_not_empty(db_gui))
+        {
+            write_unit_db(db_gui);
+            initialise_unit_db();
+        }
     }
-    if (btn[0].trigger == true)
-    {
-        write_unit_db(in_db);
-        initialise_unit_db();
-    }
-    if (btn[1].trigger == true)
+    if (check_button_press(db_gui[27]))
         return (MENU);
     return (DATABASE);
 }
@@ -179,6 +220,7 @@ void    draw_grid(int scroll_h_offset, int scroll_v_offset)
     int k;
     int l;
     mINI::INIFile file ("data/UnitNames.ini");
+    const char  *db_names[13] = {"ID", "Cost", "Tag 1", "Tag 2", "Tag 3", "Attack", "Health", "AtkSpd", "AblPwr", "Defense", "Range", "AblCost", "Gauge"};
     mINI::INIStructure ini;
     file.read(ini);
     char    int_str[4];
@@ -210,41 +252,29 @@ void    draw_grid(int scroll_h_offset, int scroll_v_offset)
     }
 }
 
-void    draw_database(sprite *btn, input_box *in_db, int screen_width, int screen_height, int frame_count)
+void    draw_database(gui_base **db_gui, int screen_width, int screen_height, int frame_count)
 {
-    int i;
+    const char  *db_names[13] = {"ID", "Cost", "Tag 1", "Tag 2", "Tag 3", "Attack", "Health", "AtkSpd", "AblPwr", "Defense", "Range", "AblCost", "Gauge"};
 
-    i = 0;
-    DrawRectangle(0, 0, screen_width, 64 * (((DATABASE_INPUTS + i) * 160) / (screen_width - 160)) + 96, LIME);
-    while (i < 13)
     {
-        DrawText(db_names[i], in_db[i].box.x, in_db[i].box.y - 20, 20, DARKGREEN);
-        input_status_visual(&in_db[i], frame_count);
-        i++;
+        gui_scrollbar   *scrollbar = dynamic_cast <gui_scrollbar *> (db_gui[28]);
+        if (scrollbar)
+        {
+            GuiScrollPanel(scrollbar->get_bounds(), NULL, scrollbar->get_content(), &(scrollbar->scroll));
+            draw_grid(scrollbar->scroll.x, scrollbar->scroll.y);
+        }
     }
-    i = 0;
-    while (i < DATABASE_BUTTONS)
+    DrawRectangle(0, 0, screen_width, 64 * (((DATABASE_INPUTS) * 160) / (screen_width - 160)) + 96, LIME);
+    for (int i = 13; i < 26; i++)
     {
-        DrawTextureRec(btn[i].image, btn[i].source, (Vector2){ btn[i].hitbox.x, btn[i].hitbox.y }, WHITE);
-        i++;
+        gui_textbox *textbox = dynamic_cast <gui_textbox *> (db_gui[i]);
+        DrawText(db_names[i - 13], textbox->get_bounds().x, textbox->get_bounds().y - 20, 20, DARKGREEN);
+        input_status_visual(textbox, frame_count);
     }
-}
-
-input_box   *initialise_db_in(int screen_width)
-{
-    input_box   *in_db;
-    int         i;
-    int         divided;
-    int         remainder;
-
-    in_db = (input_box *) malloc (sizeof(input_box) * DATABASE_INPUTS);
-    i = 0;
-    while (i < DATABASE_INPUTS)
+    for (int i = 26; i < 28; i++)
     {
-        divided = ((i * 160) % (screen_width - 160)) + 64;
-        remainder = 64 * ((i * 160) / (screen_width - 160)) + 32;
-        in_db[i].initialise(divided, remainder, db_max_input[i]);
-        i++;
+        gui_button  *button = dynamic_cast<gui_button *> (db_gui[i]);
+        if (button)
+            button->set_checked(GuiButton(button->get_bounds(), button->get_text())); 
     }
-    return (in_db);
 }
