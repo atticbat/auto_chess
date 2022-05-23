@@ -44,3 +44,11 @@ int check_default_y(gui_base *gui)
         return (dropdown->get_default_y());
     return (1080);
 }
+
+int check_dropdown_choice(gui_base *gui)
+{
+    gui_dropdown    *dropdown = dynamic_cast<gui_dropdown *> (gui);
+    if (dropdown)
+        return (dropdown->choice);
+    return (3);
+}

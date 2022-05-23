@@ -16,6 +16,14 @@ protected:
     char                *text = NULL;
     Rectangle           bounds;
 public:
+    ~gui_base()
+    {
+        if (text)
+        {
+            free (text);
+            text = NULL;
+        }
+    }
     virtual void        set_bounds(int offset_x, int offset_y, int id, const char *mode, mINI::INIFile file)
     {
         mINI::INIStructure ini;
@@ -64,15 +72,6 @@ public:
         text = ptr;
     }
 
-    void                free_text(void) 
-    {
-        if (text)
-        {
-            free(text);
-            text = NULL;
-        }
-    }
-
     Rectangle           get_bounds(void) { return (bounds); }
     virtual char        *get_text(void) { return (text); }
 };
@@ -99,17 +98,17 @@ public:
 class gui_slider : public gui_base
 {
 private:
-    char    *text_right = NULL;
+    // char    *text_right = NULL;
     float   value = 0;
     float   min = 0;
     float   max = 100;
 public:
-    char        *get_text(int side) 
-    { 
-        if (side == 1)
-            return (text_right);
-        return (text);
-    }
+    // char        *get_text(int side) 
+    // { 
+    //     if (side == 1)
+    //         return (text_right);
+    //     return (text);
+    // }
     void        value_init(float _value, float _min, float _max)
     {
         value = _value;
@@ -205,10 +204,61 @@ public:
     Rectangle   get_content(void) { return (content); }
 };
 
+class gui_drag_drop : public gui_base
+{
+private:
+    bool        is_picked = false;
+    void        *data = NULL;
+    Rectangle   mouse_bounds;
+public:
+    void        set_is_picked_up (bool _is_picked) { is_picked = _is_picked; }
+    bool        get_is_picked_up (void) { return (is_picked); }
+    void        set_mouse_bounds(Vector2 mouse_point)
+    {
+        mouse_bounds = (Rectangle) { mouse_point.x - 32, mouse_point.y - 32, get_bounds().width, get_bounds().height };
+    }
+    void        set_bounds(int offset_x, int offset_y, int id, const char *mode, mINI::INIFile file)
+    {
+        mINI::INIStructure ini;
+        float param[4];
+        int i;
+        char    str[16];
+        int from = 0;
+        int to = 0;
+        char    c[5];
+
+        ft_itoa(id, c);
+        file.read(ini);
+        i = 0;
+        strlcpy(str, ini.get(mode).get(c).c_str(), 16);
+        while (i < 4)
+        {
+            param[i] = 0;
+            to = from;
+            while (str[to] != ',' && str[to] != '\0')
+                to++;
+            while (from < to)
+            {
+                param[i] = (param[i] * 10) + (str[from] - '0');
+                from++;
+            }
+            i++;
+            if (i < 4)
+                from = to + 1;
+        }
+        bounds = (Rectangle) { param[0] + offset_x, param[1] + offset_y, param[2], param[3] };
+        mouse_bounds = bounds;
+    }
+    Rectangle   get_mouse_bounds (void) { return (mouse_bounds); }
+};
+
+//gui container
+
 bool        check_checkbox(gui_base *gui);
 bool        check_button_press(gui_base *gui);
 game_state  check_button_destination(gui_base *gui);
 int         check_default_x(gui_base *gui);
 int         check_default_y(gui_base *gui);
+int         check_dropdown_choice(gui_base *gui);
 
 #endif

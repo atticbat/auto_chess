@@ -10,8 +10,9 @@
 
 gui_base    **initialise_database(void);
 game_state  check_database(gui_base **db_gui, Vector2 mousePoint, int *frame_count);
-void        draw_database(gui_base **db_gui, int screen_width, int screen_height, int frame_count);
+void        draw_database(gui_base **db_gui, Vector2 screen_dim);
 void        draw_grid(int screen_h_offset, int screen_v_offset);
-void        set_database_boundaries(gui_base **settings_gui, int screen_width, int screen_height);
+void        set_database_boundaries(gui_base **settings_gui, Vector2 screen_dim);
+void        del_database(gui_base **database_gui);
 
 #endif

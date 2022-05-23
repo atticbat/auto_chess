@@ -1,8 +1,6 @@
 #include "settings.hpp"
 #include <stdio.h>
 
-const int   resolutions[5][2] = { {960, 540}, {1280, 720}, {1600, 900}, {1920, 1080}, {2560, 1440} };
-
 static int  parse_resolution(int id)
 {
     mINI::INIFile       file ("data/settings_gui.ini");
@@ -12,7 +10,7 @@ static int  parse_resolution(int id)
     c[0] = '0' + id;
     c[1] = '\0';
     file.read(ini);
-    return (atoi(ini.get("ResolutionX").get(c).c_str()));
+    return (stoi(ini.get("ResolutionX").get(c)));
 }
 
 static int  parse_choice(int id)
@@ -24,7 +22,12 @@ static int  parse_choice(int id)
     c[0] = '0' + id;
     c[1] = '\0';
     file.read(ini);
-    return (atoi(ini.get("DropdownDefaultChoice").get(c).c_str()));
+    return (stoi(ini.get("DropdownDefaultChoice").get(c)));
+}
+
+Vector2     get_screen_dim(void)
+{
+    return ((Vector2) { (float) parse_resolution(parse_choice(0)), (float) (parse_resolution(parse_choice(0)) / 16) * 9 });
 }
 
 gui_base    **initialise_settings(void)
@@ -45,13 +48,17 @@ gui_base    **initialise_settings(void)
     }
     for (int i = 0; i < 2; i++)
     {
-        *ptr = new gui_checkbox;
+        gui_checkbox    *checkbox = new gui_checkbox;
+        if (IsWindowFullscreen())
+            checkbox->set_checked(true);
+        *ptr = checkbox;
         ptr++;
     }
     for (int i = 0; i < 2; i++)
     {
         gui_button  *button = new gui_button;
         button->set_text(i, text_modes[2], file);
+        button->set_destination(MENU);
         *ptr = button;
         ptr++;
     }
@@ -65,8 +72,8 @@ gui_base    **initialise_settings(void)
     {
         gui_dropdown    *dropdown =  new gui_dropdown;
         dropdown->set_text(i, text_modes[1], file);
-        dropdown->set_default(parse_resolution(i), (parse_resolution(i) / 16) * 9);
         dropdown->choice = parse_choice(i); 
+        dropdown->set_default(parse_resolution(dropdown->choice), (parse_resolution(dropdown->choice) / 16) * 9);
         *ptr = dropdown;
         if (i == 0)
             ptr++;
@@ -74,24 +81,26 @@ gui_base    **initialise_settings(void)
     return (settings_gui);
 }
 
-void    set_settings_boundaries(gui_base **settings_gui, int screen_width, int screen_height, int settings_width, int settings_height)
+void    set_settings_boundaries(gui_base **settings_gui, Vector2 screen_dim, Vector2 settings_dim)
 {
     mINI::INIFile   file("data/settings_gui.ini");
     const char          *bound_modes[5] = {"LabelBounds", "SliderBounds", "DropdownBounds", "CheckBoxBounds", "ButtonBounds"};
 
     for (int i = 0; i < 5; i++)
-        settings_gui[i]->set_bounds((screen_width - settings_width)/2, (screen_height - settings_height)/2, i, bound_modes[0], file);
+        settings_gui[i]->set_bounds((screen_dim.x - settings_dim.x)/2, (screen_dim.y - settings_dim.y)/2, i, bound_modes[0], file);
     for (int i = 5; i < 7; i++)
-        settings_gui[i]->set_bounds((screen_width - settings_width)/2, (screen_height - settings_height)/2, i - 5, bound_modes[3], file);
+        settings_gui[i]->set_bounds((screen_dim.x - settings_dim.x)/2, (screen_dim.y - settings_dim.y)/2, i - 5, bound_modes[3], file);
     for (int i = 7; i < 9; i++)
-        settings_gui[i]->set_bounds((screen_width - settings_width)/2, (screen_height - settings_height)/2, i - 7, bound_modes[4], file);
-    settings_gui[9]->set_bounds((screen_width - settings_width)/2, (screen_height - settings_height)/2, 0, bound_modes[1], file);
+        settings_gui[i]->set_bounds((screen_dim.x - settings_dim.x)/2, (screen_dim.y - settings_dim.y)/2, i - 7, bound_modes[4], file);
+    settings_gui[9]->set_bounds((screen_dim.x - settings_dim.x)/2, (screen_dim.y - settings_dim.y)/2, 0, bound_modes[1], file);
     for (int i = 10; i < 12; i++)
-        settings_gui[i]->set_bounds((screen_width - settings_width)/2, (screen_height - settings_height)/2, i - 10, bound_modes[2], file);
+        settings_gui[i]->set_bounds((screen_dim.x - settings_dim.x)/2, (screen_dim.y - settings_dim.y)/2, i - 10, bound_modes[2], file);
 }
 
-void    draw_settings_gui(gui_base **settings_gui)
+void    draw_settings_gui(gui_base **settings_gui, Vector2 screen_dim, Vector2 settings_dim)
 {
+    ClearBackground(DARKBROWN);
+    DrawRectangle((screen_dim.x - settings_dim.x)/2, (screen_dim.y - settings_dim.y)/2, settings_dim.x, settings_dim.y, RAYWHITE);
     for (int i = 0; i < 5; i++)
         DrawText(settings_gui[i]->get_text(), settings_gui[i]->get_bounds().x, settings_gui[i]->get_bounds().y, 32, DARKGRAY);
     for (int i = 5; i < 7; i++)
@@ -116,6 +125,66 @@ void    draw_settings_gui(gui_base **settings_gui)
         gui_dropdown    *temp = dynamic_cast<gui_dropdown *> (settings_gui[i]);
         if (temp)
             GuiDropdownBox(temp->get_bounds(), temp->get_text(), &(temp->choice), temp->get_edit_mode());
-        temp->set_default(resolutions[temp->choice][0], resolutions[temp->choice][1]);
+        temp->set_default(parse_resolution(temp->choice), (parse_resolution(temp->choice) / 16) * 9);
     }
+}
+
+game_state  check_settings(gui_base **settings_gui, Vector2 *screen_dim, Vector2 max_dim, Vector2 settings_dim, Vector2 mouse_point)
+{
+    if (check_button_press(settings_gui[7]))
+        return (check_button_destination(settings_gui[7]));
+    if (check_button_press(settings_gui[8]))
+    {
+        if (check_checkbox(settings_gui[5]) && !IsWindowFullscreen())
+        {
+            //enter fullscreen
+            screen_dim->x = max_dim.x;
+            screen_dim->y = max_dim.y;
+            SetWindowSize(screen_dim->x, screen_dim->y);
+            ToggleFullscreen();
+            set_settings_boundaries(settings_gui, *screen_dim, settings_dim);
+        }
+        else if (!check_checkbox(settings_gui[5]) && IsWindowFullscreen())
+        {
+            //exit fullscreen
+            ToggleFullscreen();
+            screen_dim->x = check_default_x(settings_gui[10]);
+            screen_dim->y = check_default_y(settings_gui[10]);
+            SetWindowSize(screen_dim->x, screen_dim->y);
+            set_settings_boundaries(settings_gui, *screen_dim, settings_dim);
+        }
+        else if (!IsWindowFullscreen())
+        {
+            //resize
+            screen_dim->x = check_default_x(settings_gui[10]);
+            screen_dim->y = check_default_y(settings_gui[10]);
+            SetWindowSize(screen_dim->x, screen_dim->y);
+            set_settings_boundaries(settings_gui, *screen_dim, settings_dim);
+        }
+        mINI::INIFile file ("data/settings_gui.ini");
+        mINI::INIStructure ini;
+        char    holder[5];
+
+        ft_itoa(check_dropdown_choice(settings_gui[10]), holder);
+        file.read(ini);
+        ini["DropdownDefaultChoice"]["0"] = holder;
+        file.write(ini);
+    }
+    for (int i = 10; i < 12; i++)
+    {
+        gui_dropdown    *temp = dynamic_cast<gui_dropdown *> (settings_gui[i]);
+        if (temp)
+        {
+            if (CheckCollisionPointRec(mouse_point, temp->get_bounds()) && IsGestureDetected(GESTURE_TAP))
+                temp->toggle_edit_mode();
+        }
+    }
+    return (SETTINGS);
+}
+
+void    del_settings(gui_base **settings_gui)
+{
+    for (int i = 0; i < 12; i++)
+        delete (settings_gui[i]);
+    free (settings_gui);
 }

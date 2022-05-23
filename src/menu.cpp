@@ -2,6 +2,7 @@
 
 void draw_menu_gui(gui_base **menu_gui)
 {
+    ClearBackground(BEIGE);
     for (int i = 0; i < 5; i++)
     {
         gui_button  *temp = dynamic_cast<gui_button *> (menu_gui[i]);
@@ -53,4 +54,21 @@ gui_base    **initialise_menu(void)
             ptr++;
     }
     return (menu_gui);
+}
+
+game_state  check_menu(gui_base **menu_gui)
+{
+    for (int i = 0; i < 5; i++)
+    {
+        if (check_button_press(menu_gui[i]))
+            return (check_button_destination(menu_gui[i]));
+    }
+    return (MENU);
+}
+
+void    del_menu(gui_base **menu_gui)
+{
+    for (int i = 0; i < 5; i++)
+        delete (menu_gui[i]);
+    free (menu_gui);
 }

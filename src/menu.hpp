@@ -13,5 +13,7 @@ gui_base    **initialise_menu(void);
 game_state  parse_destination(int id);
 void        set_menu_boundaries(gui_base **menu_gui);
 void        draw_menu_gui(gui_base **menu_gui);
+game_state  check_menu(gui_base **menu_gui);
+void        del_menu(gui_base **menu_gui);
 
 #endif

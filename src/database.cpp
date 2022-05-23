@@ -27,28 +27,28 @@ static void initialise_unit_db(void)
     }
 }
 
-void    set_database_boundaries(gui_base **settings_gui, int screen_width, int screen_height)
+void    set_database_boundaries(gui_base **settings_gui, Vector2 screen_dim)
 {
     mINI::INIFile   file("data/database_gui.ini");
     const char  *bound_modes[3] = {"LabelBounds", "TextboxBounds", "ButtonBounds"};
-    const float header_offset = 64 * (((DATABASE_INPUTS) * 160) / (screen_width - 160)) + 96;
+    const float header_offset = 64 * (((DATABASE_INPUTS) * 160) / (screen_dim.x - 160)) + 96;
 
     for (int i = 0; i < 13; i++)
     {
-        int divided = ((i * 160) % (screen_width - 160)) + 64;
-        int remainder = 64 * ((i * 160) / (screen_width - 160)) + 32;
+        int divided = ((i * 160) % ((int) screen_dim.x - 160)) + 64;
+        int remainder = 64 * ((i * 160) / ((int) screen_dim.x - 160)) + 32;
         settings_gui[i]->set_bounds(divided, remainder, i, bound_modes[0], file);
         settings_gui[i + 13]->set_bounds(divided, remainder, i, bound_modes[1], file);
     }
     for (int i = 26; i < 28; i++)
     {
-        int divided = (((i - 13) * 160) % (screen_width - 160)) + 64;
-        int remainder = 64 * (((i - 13) * 160) / (screen_width - 160)) + 32;
+        int divided = (((i - 13) * 160) % ((int) screen_dim.x - 160)) + 64;
+        int remainder = 64 * (((i - 13) * 160) / ((int) screen_dim.x - 160)) + 32;
         settings_gui[i]->set_bounds(divided, remainder, i - 26, bound_modes[2], file);
     }
     {
         gui_scrollbar   *scrollbar = dynamic_cast <gui_scrollbar *> (settings_gui[28]);
-        scrollbar->set_bounds(0, header_offset, (float) screen_width, screen_height - header_offset);
+        scrollbar->set_bounds(0, header_offset, (float) screen_dim.x, screen_dim.y - header_offset);
         scrollbar->set_content(0, header_offset, 1080, 2880);
     }
 }
@@ -107,25 +107,25 @@ static void write_unit_db(gui_base **db_gui)
     i = 0;
     while (i < id)
     {
-        fprintf(read_txt, unit_db[i]);
-        fprintf(read_txt, "\n");
+        fprintf(read_txt, "%s", unit_db[i]);
+        fprintf(read_txt, "%s", "\n");
         i++;
     }
     int j = 0;
     while (j < DATABASE_INPUTS)
     {
-        fprintf(read_txt, db_gui[j + 13]->get_text());
+        fprintf(read_txt, "%s", db_gui[j + 13]->get_text());
         if (j < 12)
-            fprintf(read_txt, ",");
+            fprintf(read_txt, "%s", ",");
         j++;
         if (j == DATABASE_INPUTS)
-            fprintf(read_txt, "\n");
+            fprintf(read_txt, "%s", "\n");
     }
     i++;
     while (i < MAX_UNITS)
     {
-        fprintf(read_txt, unit_db[i]);
-        fprintf(read_txt, "\n");
+        fprintf(read_txt, "%s", unit_db[i]);
+        fprintf(read_txt, "%s", "\n");
         i++;
     }
     fclose(read_txt);
@@ -156,7 +156,7 @@ static void input_status_check(gui_textbox *textbox, Vector2 mousePoint, int *fr
         *frame_count = 0;
 }
 
-static void input_status_visual(gui_textbox *textbox, int frame_count)
+static void input_status_visual(gui_textbox *textbox)
 {
     Rectangle   bounds = textbox->get_bounds();
     DrawRectangleRec(textbox->get_bounds(), LIGHTGRAY);
@@ -167,8 +167,7 @@ static void input_status_visual(gui_textbox *textbox, int frame_count)
     DrawText(textbox->get_text(), bounds.x + 4, bounds.y + 8, 24, BLACK);
     if (textbox->get_edit_mode())
     {
-        if (((frame_count/60)%2) == 0)
-            DrawText("_", (int) bounds.x + 8 + MeasureText(textbox->get_text(), 24), (int) bounds.y + 8, 24, BLACK);
+        DrawText("_", (int) bounds.x + 8 + MeasureText(textbox->get_text(), 24), (int) bounds.y + 8, 24, BLACK);
     }
 }
 
@@ -220,10 +219,10 @@ void    draw_grid(int scroll_h_offset, int scroll_v_offset)
     int k;
     int l;
     mINI::INIFile file ("data/UnitNames.ini");
-    const char  *db_names[13] = {"ID", "Cost", "Tag 1", "Tag 2", "Tag 3", "Attack", "Health", "AtkSpd", "AblPwr", "Defense", "Range", "AblCost", "Gauge"};
     mINI::INIStructure ini;
     file.read(ini);
     char    int_str[4];
+    char    int_str2[4];
 
     i = 0;
     while (i < MAX_UNITS)
@@ -238,7 +237,8 @@ void    draw_grid(int scroll_h_offset, int scroll_v_offset)
             if (unit_db[i][k] == ',' || unit_db[i][k] == '\0')
             {
                 l = 0;
-                DrawText(db_names[j], 192 + 112 * j + scroll_h_offset, 192 + i * 20 + scroll_v_offset, 16, BLACK);
+                ft_itoa(j, int_str2);
+                DrawText(ini.get("DatabaseColumns").get(int_str2).c_str(), 192 + 112 * j + scroll_h_offset, 192 + i * 20 + scroll_v_offset, 16, BLACK);
                 j++;
             }
             else if (unit_db[i][k] >= '0' && unit_db[i][k] <= '9')
@@ -252,10 +252,14 @@ void    draw_grid(int scroll_h_offset, int scroll_v_offset)
     }
 }
 
-void    draw_database(gui_base **db_gui, int screen_width, int screen_height, int frame_count)
+void    draw_database(gui_base **db_gui, Vector2 screen_dim)
 {
-    const char  *db_names[13] = {"ID", "Cost", "Tag 1", "Tag 2", "Tag 3", "Attack", "Health", "AtkSpd", "AblPwr", "Defense", "Range", "AblCost", "Gauge"};
+    mINI::INIFile file ("data/UnitNames.ini");
+    mINI::INIStructure ini;
+    file.read(ini);
+    char    int_str[4];
 
+    ClearBackground(RAYWHITE);
     {
         gui_scrollbar   *scrollbar = dynamic_cast <gui_scrollbar *> (db_gui[28]);
         if (scrollbar)
@@ -264,12 +268,13 @@ void    draw_database(gui_base **db_gui, int screen_width, int screen_height, in
             draw_grid(scrollbar->scroll.x, scrollbar->scroll.y);
         }
     }
-    DrawRectangle(0, 0, screen_width, 64 * (((DATABASE_INPUTS) * 160) / (screen_width - 160)) + 96, LIME);
+    DrawRectangle(0, 0, screen_dim.x, 64 * (((DATABASE_INPUTS) * 160) / (screen_dim.x - 160)) + 96, LIME);
     for (int i = 13; i < 26; i++)
     {
+        ft_itoa(i - 13, int_str);
         gui_textbox *textbox = dynamic_cast <gui_textbox *> (db_gui[i]);
-        DrawText(db_names[i - 13], textbox->get_bounds().x, textbox->get_bounds().y - 20, 20, DARKGREEN);
-        input_status_visual(textbox, frame_count);
+        DrawText(ini.get("DatabaseColumns").get(int_str).c_str(), textbox->get_bounds().x, textbox->get_bounds().y - 20, 20, DARKGREEN);
+        input_status_visual(textbox);
     }
     for (int i = 26; i < 28; i++)
     {
@@ -277,4 +282,11 @@ void    draw_database(gui_base **db_gui, int screen_width, int screen_height, in
         if (button)
             button->set_checked(GuiButton(button->get_bounds(), button->get_text())); 
     }
+}
+
+void    del_database(gui_base **database_gui)
+{
+    for (int i = 0; i < 29; i++)
+        delete (database_gui[i]);
+    free (database_gui);
 }
