@@ -1,14 +1,11 @@
 #ifndef GUI_HPP
 # define GUI_HPP
 
-# include "../raylib-cpp/include/ini.h"
 # include "../raylib-cpp/include/raygui.h"
 # include <stdlib.h>
+# include "sprite.hpp"
 # include "game_progression.hpp"
-# include "input_box.hpp"
 # define RAYGUI_IMPLEMENTATION
-
-void        ft_itoa(int num, char *buffer);
 
 class gui_base
 {
@@ -207,52 +204,44 @@ public:
 class gui_drag_drop : public gui_base
 {
 private:
-    bool        is_picked = false;
-    void        *data = NULL;
-    Rectangle   mouse_bounds;
+    bool                is_picked = false;
+    bool                display = false;
+    int                 unit_id = 0;
+    sprite_picked_up    *sprite = NULL;
 public:
-    void        set_is_picked_up (bool _is_picked) { is_picked = _is_picked; }
-    bool        get_is_picked_up (void) { return (is_picked); }
-    void        set_mouse_bounds(Vector2 mouse_point)
+    void                set_is_picked_up (bool _is_picked) { is_picked = _is_picked; }
+    bool                get_is_picked_up (void) { return (is_picked); }
+    void                generate_picked_up_sprite (int id, int frames)
     {
-        mouse_bounds = (Rectangle) { mouse_point.x - 32, mouse_point.y - 32, get_bounds().width, get_bounds().height };
+        sprite = new sprite_picked_up(unit_id, frames);
+        unit_id = 0;
     }
-    void        set_bounds(int offset_x, int offset_y, int id, const char *mode, mINI::INIFile file)
+    void                remove_sprite(void)
     {
-        mINI::INIStructure ini;
-        float param[4];
-        int i;
-        char    str[16];
-        int from = 0;
-        int to = 0;
-        char    c[5];
-
-        ft_itoa(id, c);
-        file.read(ini);
-        i = 0;
-        strlcpy(str, ini.get(mode).get(c).c_str(), 16);
-        while (i < 4)
+        if (sprite)
         {
-            param[i] = 0;
-            to = from;
-            while (str[to] != ',' && str[to] != '\0')
-                to++;
-            while (from < to)
-            {
-                param[i] = (param[i] * 10) + (str[from] - '0');
-                from++;
-            }
-            i++;
-            if (i < 4)
-                from = to + 1;
+            unit_id = sprite->get_unit_id();
+            delete (sprite);
+            sprite = NULL;
         }
-        bounds = (Rectangle) { param[0] + offset_x, param[1] + offset_y, param[2], param[3] };
-        mouse_bounds = bounds;
     }
-    Rectangle   get_mouse_bounds (void) { return (mouse_bounds); }
-};
+    void                draw_sprite(Vector2 mouse_point)
+    {
+        DrawTextureRec(sprite->get_image(), sprite->get_source(), sprite->get_offset_location(mouse_point), WHITE);
+    }
+    void                set_unit_id(int id) { unit_id = id; }
+    int                 get_unit_id(void) { return (unit_id); }
+    int                 get_sprite_id(void)
+    {
+        if (sprite)
+            return (sprite->get_unit_id());
+        return (0);
+    }
+    void                set_sprite_id(int id) { sprite->set_unit_id(id); }
+    void                toggle_display(void) { display = !display; }
+    bool                get_display(void) { return (display); }
 
-//gui container
+};
 
 bool        check_checkbox(gui_base *gui);
 bool        check_button_press(gui_base *gui);
