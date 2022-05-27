@@ -3,8 +3,10 @@
 VPATH	=	src
 SDIR 	=	src/
 NAME	=	auto_chess
-FUNCTS	=	main.cpp sprite.cpp menu.cpp database.cpp ft_itoa.cpp settings.cpp \
-			gui.cpp
+FUNCTS	=	main.cpp sprite.cpp menu.cpp ft_itoa.cpp settings.cpp draft.cpp \
+			database.cpp game_progression.cpp gui_checkbox.cpp gui_button.cpp \
+			gui_slider.cpp gui_scrollbar.cpp gui_dropdown.cpp \
+			storyboard_controls.cpp gui_textbox.cpp gui_drag_drop.cpp
 OBJS	=	$(FUNCTS:.cpp=.o)
 SPATH	=	$(addprefix $(SDIR),$(OBJS))
 DPATH	=	$(addprefix $(SDIR),$(OBJS:.o=.d))

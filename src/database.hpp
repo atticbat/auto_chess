@@ -1,18 +1,16 @@
 #ifndef DATABASE_HPP
 # define DATABASE_HPP
 
-# include "../raylib-cpp/include/ini.h"
-# include "gui.hpp"
+# include "storyboard_controls.hpp"
 
-# define DATABASE_BUTTONS 2
 # define DATABASE_INPUTS 13
 # define MAX_UNITS 128
 
-gui_base    **initialise_database(void);
-game_state  check_database(gui_base **db_gui, Vector2 mousePoint, int *frame_count);
-void        draw_database(gui_base **db_gui, Vector2 screen_dim);
-void        draw_grid(int screen_h_offset, int screen_v_offset);
-void        set_database_boundaries(gui_base **settings_gui, Vector2 screen_dim);
-void        del_database(gui_base **database_gui);
+void        initialise_database(std::multimap <gui_type, gui_base *> *gui);
+void        set_database_boundaries(std::multimap <gui_type, gui_base *> *gui, Vector2 screen_dim);
+void        draw_grid(int scroll_h_offset, int scroll_v_offset);
+void        initialise_unit_db(void);
+void        write_unit_db(std::multimap <gui_type, gui_base*> *gui);
+void        edit_unit(std::multimap <gui_type, gui_base*> *gui);
 
 #endif

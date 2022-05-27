@@ -1,73 +1,6 @@
 #include "auto_chess.hpp"
-
-#define RAYGUI_IMPLEMENTATION
-#include "../raylib-cpp/include/raygui.h"
 #include <stdlib.h>
 #include <stdio.h>
-
-gui_base    **initialise_draft (void)
-{
-    gui_base        **draft_gui;
-    gui_base        **ptr;
-    mINI::INIFile   file ("data/draft_gui.ini");
-    const char      *text_modes[3] = {"LabelText", "DragDropText"};
-
-    draft_gui = (gui_base **) malloc (sizeof(gui_base *) * 13);
-    ptr = draft_gui;
-    for (int i = 0; i < 5; i++)
-    {
-        gui_drag_drop   *drag_drop = new gui_drag_drop;
-        drag_drop->set_unit_id(1);
-        drag_drop->set_text(i, text_modes[1], file);
-        *ptr = drag_drop;
-        ptr++;
-    }
-    for (int i = 5; i < 13; i++)
-    {
-        gui_drag_drop   *drag_drop = new gui_drag_drop;
-        drag_drop->set_unit_id(0);
-        drag_drop->set_text(i, text_modes[1], file);
-        *ptr = drag_drop;
-        if (i < 12)
-            ptr++;
-    }
-    return (draft_gui);
-}
-
-void    set_draft_boundaries(gui_base **draft_gui, Vector2 screen_dim)
-{
-    mINI::INIFile   file("data/draft_gui.ini");
-    const char      *bound_modes[5] = {"LabelBounds", "DragDropBounds"};
-
-    for (int i = 0; i < 5; i++)
-        draft_gui[i]->set_bounds(screen_dim.x * 0.35 + i * (screen_dim.y * 0.2125), screen_dim.y * 0.775, i, bound_modes[1], file);
-    for (int i = 5; i < 13; i++)
-        draft_gui[i]->set_bounds((i - 5) * (screen_dim.x / 8) + screen_dim.x / 48, screen_dim.y / 2, i, bound_modes[1], file); 
-}
-
-void    draw_draft_gui(gui_base **draft_gui, Vector2 screen_dim, Vector2 mouse_point)
-{
-    ClearBackground(RAYWHITE);
-    DrawRectangle(0, screen_dim.y * 0.75, screen_dim.x, screen_dim.y * 0.25, BROWN);
-    for (int i = 0; i < 13; i++)
-    {
-        gui_drag_drop   *drag_drop = dynamic_cast <gui_drag_drop *> (draft_gui[i]);
-
-        GuiDrawRectangle(drag_drop->get_bounds(), 1, BLACK, RAYWHITE);
-        if (drag_drop && drag_drop->get_is_picked_up())
-            drag_drop->draw_sprite(mouse_point);
-    }
-}
-
-int check_collision(Vector2 mouse_point, gui_base **gui, int except)
-{
-    for (int i = 0; i < 13; i++)
-    {
-        if (CheckCollisionPointRec(mouse_point, gui[i]->get_bounds()) && (except != i))
-            return (i);
-    }
-    return (-1);
-}
 
 int main(void)
 {
@@ -76,19 +9,16 @@ int main(void)
     int             frame_count = 0;
     Vector2         screen_dim = get_screen_dim();
     const Vector2   max_dim = { (float) GetScreenWidth(), (float) GetScreenHeight() };
+    float           res_multiplier = screen_dim.x / max_dim.x;
     const Vector2   settings_dim = { 800, 450 };
     Vector2         mouse_point = { 0.0f, 0.0f };
     bool            exit_window = false;
-    gui_base        **gui = initialise_menu();
+    std::multimap <gui_type, gui_base *> gui;
+    mINI::INIFile file ("data/menu_gui.ini");
 
+    initialise_menu(&gui);
+    set_boundaries(&gui, 0, 0, file, 1);
     SetWindowSize(screen_dim.x, screen_dim.y);
-    set_menu_boundaries(gui);
-
-    //draft stuff
-    gui_base    **draft_gui = initialise_draft();
-    set_draft_boundaries(draft_gui, screen_dim);
-    //draft stuff
-
     SetTargetFPS(60);
     while (!exit_window)
     {
@@ -105,77 +35,100 @@ int main(void)
             } break;
             case MENU:
             {
-                current_state = check_menu(gui);
+                current_state = check_gui(&gui, mouse_point, current_state);
                 if (current_state != MENU)
-                    del_menu(gui);
+                    del_gui(&gui);
                 if (current_state == SETTINGS)
                 {
-                    gui = initialise_settings();
-                    set_settings_boundaries(gui, screen_dim, settings_dim);
+                    initialise_settings(&gui);
+                    file.reset("data/settings_gui.ini");
+                    set_boundaries(&gui, (screen_dim.x - settings_dim.x) / 2, \
+                        (screen_dim.y - settings_dim.y) / 2, file, 1);
                 }
                 else if (current_state == DATABASE)
                 {
-                    gui = initialise_database(); 
-                    set_database_boundaries(gui, screen_dim);
+                    initialise_database(&gui);
+                    initialise_unit_db();
+                    file.reset("data/database_gui.ini");
+                    set_database_boundaries(&gui, screen_dim);
+                }
+                else if (current_state == DRAFT)
+                {
+                    initialise_draft(&gui);
+                    file.reset("data/draft_gui.ini");
+                    set_boundaries(&gui, 0, 0, file, res_multiplier);
                 }
             } break;
             case SETTINGS:
             {
-                current_state = check_settings(gui, &screen_dim, max_dim, settings_dim, mouse_point);
-                if (current_state != SETTINGS)
-                    del_settings(gui);
+                current_state = check_gui(&gui, mouse_point, current_state);
+                res_multiplier = screen_dim.x / max_dim.x;
+                if (current_state != SETTINGS && (int)current_state < 8)
+                    del_gui(&gui);
                 if (current_state == MENU)
                 {
-                    gui = initialise_menu();
-                    set_menu_boundaries(gui);
+                    file.reset("data/menu_gui.ini");
+                    initialise_menu(&gui);
+                    set_boundaries(&gui, 0, 0, file, 1);
+                }
+                if (current_state == DRAFT)
+                {
+                    file.reset("data/draft_gui.ini");
+                    initialise_draft(&gui);
+                    set_boundaries(&gui, 0, 0, file, 1);
                 }
             } break;
             case DRAFT:
             {
-                for (int i = 0; i < 13; i++)
+                current_state = check_gui(&gui, mouse_point, current_state);
+                if (current_state != DRAFT)
+                    del_gui(&gui);
+                if (current_state == MENU)
                 {
-                    gui_drag_drop   *drag_drop = dynamic_cast <gui_drag_drop *> (draft_gui[i]);
-                    if (drag_drop && CheckCollisionPointRec(mouse_point, drag_drop->get_bounds()) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && drag_drop->get_unit_id())
-                    {
-                        drag_drop->generate_picked_up_sprite(0, 1);
-                        drag_drop->set_is_picked_up(true);
-                    }
-                    // index_overlapped = ;
-                    if (drag_drop && IsMouseButtonReleased(MOUSE_LEFT_BUTTON) && drag_drop->get_is_picked_up())
-                    {
-                        int index_overlapped = check_collision(mouse_point, draft_gui, i);
-                        if (index_overlapped > -1)
-                        {
-                            gui_drag_drop   *drag_destination = dynamic_cast <gui_drag_drop *> (draft_gui[index_overlapped]);
-                            if (drag_destination)
-                                drag_destination->set_unit_id(drag_drop->get_sprite_id());
-                            drag_drop->set_sprite_id(0);
-                        }
-                        drag_drop->set_is_picked_up(false);
-                        drag_drop->remove_sprite();
-                    }
+                    file.reset("data/menu_gui.ini");
+                    initialise_menu(&gui);
+                    set_boundaries(&gui, 0, 0, file, 1);
+                }
+                if (current_state == SETTINGS)
+                {
+                    initialise_settings(&gui);
+                    file.reset("data/settings_gui.ini");
+                    set_boundaries(&gui, (screen_dim.x - settings_dim.x) / 2, \
+                        (screen_dim.y - settings_dim.y) / 2, file, 1);
                 }
             } break;
             case SIMULATION:
             {
                 if (IsKeyPressed(KEY_ENTER) || IsGestureDetected(GESTURE_TAP))
                 {
+                    file.reset("data/menu_gui.ini");
                     current_state = MENU;
-                    gui = initialise_menu();
-                    set_menu_boundaries(gui);
+                    initialise_menu(&gui);
+                    set_boundaries(&gui, 0, 0, file, 1);
                 }
             } break;
             case DATABASE:
             {
-                current_state = check_database(gui, mouse_point, &frame_count);
-                if (current_state != DATABASE)
-                    del_database(gui);
+                current_state = check_gui(&gui, mouse_point, current_state);
+                if (current_state != DATABASE && (int)current_state < 8)
+                    del_gui(&gui);
                 if (current_state == MENU)
                 {
-                    gui = initialise_menu();
-                    set_menu_boundaries(gui);                   
+                    file.reset("data/menu_gui.ini");
+                    initialise_menu(&gui);
+                    set_boundaries(&gui, 0, 0, file, 1);
                 }
             } break;
+            case APPLY:
+            {
+                apply_settings(&gui, &screen_dim, max_dim, settings_dim);
+                current_state = SETTINGS;
+            } break ;
+            case EDIT_UNIT:
+            {
+                edit_unit(&gui);
+                current_state = DATABASE;
+            } break ;
             case EXIT:
             {
                 exit_window = true;
@@ -193,18 +146,23 @@ int main(void)
                 } break;
                 case MENU:
                 {
-                    draw_menu_gui(gui);
+                    ClearBackground(BLUE);
+                    draw_gui(&gui, screen_dim, settings_dim, mouse_point);
                 } break;
+                case APPLY:
                 case SETTINGS:
                 {
-                    draw_settings_gui(gui, screen_dim, settings_dim);
+                    ClearBackground(DARKBROWN);
+                    DrawRectangle((screen_dim.x - settings_dim.x)/2, \
+                        (screen_dim.y - settings_dim.y)/2, settings_dim.x, \
+                        settings_dim.y, RAYWHITE);
+                    draw_gui(&gui, screen_dim, settings_dim, mouse_point);
                 } break;
                 case DRAFT:
                 {
-                    // for (int i = 0; i < 8; i++)
-                        // DrawRectangle(i * (screen_dim.x / 8) + screen_dim.x / 48, screen_dim.y / 2, screen_dim.x / 12, screen_dim.y / 16, DARKGREEN);
-                    //DrawTextureRec(button, sourceRec, (Vector2){ btnBounds.x, btnBounds.y }, WHITE);
-                    draw_draft_gui(draft_gui, screen_dim, mouse_point);
+                    ClearBackground(RAYWHITE);
+                    DrawRectangle(0, screen_dim.y * 0.75, screen_dim.x, screen_dim.y * 0.25, BROWN);
+                    draw_gui(&gui, screen_dim, settings_dim, mouse_point);
                 } break;
                 case SIMULATION:
                 {
@@ -213,9 +171,15 @@ int main(void)
                     DrawText("SIMULATION", 120, 160, 20, DARKPURPLE);
                     DrawText("PRESS ENTER or TAP to JUMP to MENU SCREEN", 120, 220, 20, DARKPURPLE);
                 } break;
+                case EDIT_UNIT:
                 case DATABASE:
                 {
-                    draw_database(gui, screen_dim);
+                    ClearBackground(RAYWHITE);
+                    DrawRectangle(0, 0, screen_dim.x, 64 * (((DATABASE_INPUTS) * 160) / (screen_dim.x - 160)) + 96, LIME);
+                    draw_gui(&gui, screen_dim, settings_dim, mouse_point);
+                    draw_grid(check_scrollbar_x(find_gui_by_id(&gui, 15, \
+                        G_SCROLLBAR)), check_scrollbar_y(find_gui_by_id(&gui, \
+                        15, G_SCROLLBAR)));
                 } break;
                 default: break;
             }

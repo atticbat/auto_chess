@@ -742,6 +742,11 @@ namespace mINI
 
 		~INIFile() { }
 
+		void reset(std::string const& _filename)
+		{ 
+			filename = _filename;
+		}
+
 		bool read(INIStructure& data) const
 		{
 			if (data.size())
