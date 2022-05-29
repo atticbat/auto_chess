@@ -11,5 +11,6 @@ bool        check_dropdown_edit_mode(gui_base *gui);
 void        set_dropdown_default(gui_base *gui, int x, int y);
 void        check_dropdowns(std::multimap <gui_type, gui_base *> *gui, \
     Vector2 mouse_point);
+void        draw_dropdowns(gui_base *gui);
 
 #endif

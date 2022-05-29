@@ -5,7 +5,6 @@
 # include <stdlib.h>
 # include <map>
 # include "sprite.hpp"
-
 # define RAYGUI_IMPLEMENTATION
 
 class gui_base

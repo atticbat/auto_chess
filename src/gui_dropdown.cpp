@@ -1,5 +1,7 @@
 #include "gui_dropdown.hpp"
 
+int parse_resolution(int id);
+
 int     *get_dropdown_choice_ptr(gui_base *gui)
 {
     gui_dropdown    *dropdown = dynamic_cast<gui_dropdown *> (gui);
@@ -68,4 +70,14 @@ void    check_dropdowns(std::multimap <gui_type, gui_base *> *gui, \
                 dropdown->toggle_edit_mode();
         }
     }
+}
+
+void    draw_dropdowns(gui_base *gui)
+{
+    gui_dropdown    *dropdown = dynamic_cast <gui_dropdown *> (gui);
+    int resolution_x = parse_resolution(dropdown->choice);
+
+    GuiDropdownBox(dropdown->get_bounds(), dropdown->get_text(),\
+        &(dropdown->choice), dropdown->get_edit_mode());
+    dropdown->set_default(resolution_x, (resolution_x / 16) * 9);
 }

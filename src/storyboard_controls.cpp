@@ -53,14 +53,7 @@ void    draw_gui(std::multimap <gui_type, gui_base *> *gui, Vector2 \
             } break ;
             case (G_DROPDOWN):
             {
-                int resolution_x = parse_resolution(check_dropdown_choice(\
-                    i->second));
-
-                GuiDropdownBox(i->second->get_bounds(), i->second->get_text(),\
-                    get_dropdown_choice_ptr(i->second), \
-                    check_dropdown_edit_mode(i->second));
-                set_dropdown_default(i->second, resolution_x, (resolution_x / \
-                    16) * 9);
+                draw_dropdowns(i->second);
             } break ;
             case (G_TEXTBOX):
             {
@@ -68,14 +61,8 @@ void    draw_gui(std::multimap <gui_type, gui_base *> *gui, Vector2 \
             } break ;
             case (G_DRAG_DROP):
             {
-                gui_drag_drop   *drag_drop = dynamic_cast <gui_drag_drop *> \
-                    (i->second);
-
-                GuiDrawRectangle(drag_drop->get_bounds(), 1, BLACK, RAYWHITE);
-                if (drag_drop && drag_drop->get_is_picked_up())
-                    drag_drop->draw_sprite(mouse_point);
-                else if (drag_drop->get_display() && drag_drop->get_sprite_id())
-                    drag_drop->draw_sprite((Vector2) {0, 0});
+                GuiDrawRectangle(i->second->get_bounds(), 1, BLACK, RAYWHITE);
+                draw_drag_drops(i->second, mouse_point);
             } break ;
             case (G_PROGRESS_BAR):
             {

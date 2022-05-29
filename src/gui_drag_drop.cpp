@@ -3,14 +3,6 @@
 gui_base    *find_gui_by_id(std::multimap <gui_type, gui_base*> *gui, \
     int id, gui_type state);
 
-void    check_drag_drops(std::multimap <gui_type, gui_base *> *gui, \
-    Vector2 mouse_point)
-{
-    auto range = gui->equal_range(G_DRAG_DROP);
-
-    for (auto i = range.first; i != range.second; ++i)
-        drag_drop_controls(gui, i->second, mouse_point);
-}
 
 static int  check_collision(Vector2 mouse_point, std::multimap <gui_type, \
     gui_base *> *gui, int except)
@@ -50,11 +42,9 @@ static void handle_drop(std::multimap <gui_type, gui_base *> *gui, \
     drag->set_sprite_id(0);
 }
 
-void    drag_drop_controls(std::multimap <gui_type, gui_base *> *gui, \
-    gui_base *second, Vector2 mouse_point)
+static void drag_drop_controls(std::multimap <gui_type, gui_base *> *gui, \
+    gui_drag_drop *drag, Vector2 mouse_point)
 {
-    gui_drag_drop   *drag = dynamic_cast <gui_drag_drop *> (second);
-
     if (drag && CheckCollisionPointRec(mouse_point, drag->get_bounds()) && \
         IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && drag->get_unit_id())
     {
@@ -73,5 +63,47 @@ void    drag_drop_controls(std::multimap <gui_type, gui_base *> *gui, \
         drag->remove_sprite();
         if (drag->get_display() && drag->get_unit_id())
             drag->generate_static_sprite(1, 1);
+    }
+}
+
+void    del_sprites(std::multimap <gui_type, gui_base *> *gui)
+{
+    auto    range = gui->equal_range(G_DRAG_DROP);
+
+    for (auto i = range.first; i != range.second; ++i)
+    {
+        gui_drag_drop   *drag_drop = dynamic_cast <gui_drag_drop *> \
+            (i->second);
+
+        drag_drop->remove_sprite();
+    }
+}
+
+void    draw_drag_drops(gui_base *gui, Vector2 mouse_point)
+{
+    gui_drag_drop   *drag_drop = dynamic_cast <gui_drag_drop *> (gui);
+
+    if (drag_drop && drag_drop->get_is_picked_up())
+        drag_drop->draw_sprite(mouse_point);
+    else if (drag_drop->get_display() && drag_drop->get_sprite_id())
+        drag_drop->draw_sprite((Vector2) {0, 0});
+}
+
+void    check_drag_drops(std::multimap <gui_type, gui_base *> *gui, \
+    Vector2 mouse_point)
+{
+    auto range = gui->equal_range(G_DRAG_DROP);
+
+    for (auto i = range.first; i != range.second; ++i)
+    {
+        gui_drag_drop   *drag = dynamic_cast <gui_drag_drop *> (i->second);
+
+        drag_drop_controls(gui, drag, mouse_point);
+        if (!(drag->get_display()) && !(drag->get_unit_id()) && \
+            !(drag->get_is_picked_up()))
+        {
+            delete (drag);
+            gui->erase(i);
+        }
     }
 }

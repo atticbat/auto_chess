@@ -82,7 +82,10 @@ int main(void)
             {
                 current_state = check_gui(&gui, mouse_point, current_state);
                 if (current_state != DRAFT)
+                {
+                    del_sprites(&gui);
                     del_gui(&gui);
+                }
                 if (current_state == MENU)
                 {
                     file.reset("data/menu_gui.ini");

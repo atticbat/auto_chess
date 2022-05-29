@@ -1,15 +1,13 @@
 # -*- MakeFile -*-
 
 VPATH	=	src
-SDIR 	=	src/
+
 NAME	=	auto_chess
 FUNCTS	=	main.cpp sprite.cpp menu.cpp ft_itoa.cpp settings.cpp draft.cpp \
 			database.cpp game_progression.cpp gui_checkbox.cpp gui_button.cpp \
 			gui_slider.cpp gui_scrollbar.cpp gui_dropdown.cpp \
 			storyboard_controls.cpp gui_textbox.cpp gui_drag_drop.cpp
-OBJS	=	$(FUNCTS:.cpp=.o)
-SPATH	=	$(addprefix $(SDIR),$(OBJS))
-DPATH	=	$(addprefix $(SDIR),$(OBJS:.o=.d))
+OBJS	=	$(addprefix _bin/,$(notdir $(FUNCTS:.cpp=.o)))
 BREW	=	$(shell brew --prefix)
 CC		=	g++
 CFLAGS	= 	-std=c++0x -O3
@@ -17,23 +15,25 @@ IFLAGS	=	-I $(BREW)/include
 LFLAGS	=	-L $(BREW)/lib -lraylib -lcurl
 RM 		=	/bin/rm -f
 
-all: $(NAME)
-
-$(NAME): $(SPATH) 
+$(NAME): $(OBJS) 
 	$(CC) $^ $(CFLAGS) -o $@ $(LFLAGS)
 
-%.o : %.cpp
+_bin:
+	mkdir _bin
+
+_bin/%.o : %.cpp | _bin
 	$(CC) $(CFLAGS) -c -MMD -MP $(IFLAGS) $< -o $@
 
 clean:
-	$(RM) $(SPATH)
-	$(RM) $(DPATH)
+	rm -rf _bin
 
 fclean: clean
 	$(RM) $(NAME)
 
+all: $(NAME)
+
 re: fclean all
 
-.PHONY: all bonus clean fclean re
+.PHONY: all clean fclean re
 
--include $(SPATH:.o=.d)
+-include $(OBJS:.o=.d)
