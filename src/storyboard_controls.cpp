@@ -96,11 +96,13 @@ void    del_gui(std::multimap <gui_type, gui_base *> *gui)
 }
 
 game_state  check_gui(std::multimap <gui_type, gui_base *> *gui, \
-    Vector2 mouse_point, game_state current_state)
+    Vector2 mouse_point, game_state current_state, default_run *user)
 {
     current_state = check_buttons(gui, current_state);
     check_dropdowns(gui, mouse_point);
     check_textboxes(gui, mouse_point);
-    check_drag_drops(gui, mouse_point);
+    check_drag_drops(gui, mouse_point, user);
+    if (current_state == DRAFT)
+        update_label(find_gui_by_id(gui, 0, G_DYNAMIC_LABEL), user);
     return (current_state);
 }

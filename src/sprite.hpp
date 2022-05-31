@@ -4,7 +4,7 @@
 # include "../raylib-cpp/include/raylib-cpp.hpp"
 # include "../config.hpp"
 # include "conversion_functions.hpp"
-# include "game_progression.hpp"
+# include "user.hpp"
 
 class sprite_base
 {
@@ -65,6 +65,18 @@ public:
     {
         return (Vector2 { mouse_point.x - width / 2, mouse_point.y - \
             image.height * 9 / 10 });
+    }
+};
+
+class sprite_unit : public sprite_base
+{
+private:
+    bool    facing_right;
+public:
+    sprite_unit(int id, int frames, int mode) : sprite_base(id, frames, mode) { ; }
+    ~sprite_unit()
+    {
+        UnloadTexture(image);
     }
 };
 

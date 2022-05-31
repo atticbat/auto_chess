@@ -8,6 +8,7 @@
 # include "gui_dropdown.hpp"
 # include "gui_textbox.hpp"
 # include "gui_drag_drop.hpp"
+# include "gui_dynamic_label.hpp"
 
 int         parse_resolution(int id);
 void        input_status_check(gui_textbox *textbox, Vector2 mousePoint);
@@ -22,6 +23,6 @@ gui_base    *find_gui_by_id(std::multimap <gui_type, gui_base*> *gui, int \
     id, gui_type state);
 void        del_gui(std::multimap <gui_type, gui_base *> *gui);
 game_state  check_gui(std::multimap <gui_type, gui_base *> *gui, \
-    Vector2 mouse_point, game_state current_state);
+    Vector2 mouse_point, game_state current_state, default_run *user);
 
 #endif

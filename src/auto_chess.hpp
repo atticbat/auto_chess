@@ -26,5 +26,8 @@
 // # include "gui_slider.hpp"
 // # include "gui_scrollbar.hpp"
 // # include "gui_dropdown.hpp"
+# include "unit_stats.hpp"
+# include "battle_sim.hpp"
+# include "simulation.hpp"
 
 #endif

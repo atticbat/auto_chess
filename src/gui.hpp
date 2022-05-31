@@ -267,20 +267,16 @@ private:
     int         unit_id = 0;
     sprite_base *sprite = NULL;
 public:
-    ~gui_drag_drop()
-    {
-        remove_sprite(); 
-    }
     void        set_is_picked_up (bool _is_picked) { is_picked = _is_picked; }
     bool        get_is_picked_up (void) { return (is_picked); }
     void        generate_picked_up_sprite (int id, int frames)
     {
-        sprite = new sprite_picked_up(unit_id, frames, 2);
+        sprite = new sprite_picked_up(unit_id, frames, 1);
         unit_id = 0;
     }
     void        generate_static_sprite (int id, int frames)
     {
-        sprite = new sprite_base(id, frames, 3);
+        sprite = new sprite_base(id, frames, 2);
     }
     void        remove_sprite(void)
     {

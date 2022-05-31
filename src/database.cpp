@@ -7,7 +7,6 @@
 #include <iostream>
 #include <fstream>
 
-char    unit_db[MAX_UNITS][52];
 int     atoi(const char *str);
 
 void    set_database_boundaries(std::multimap <gui_type, gui_base *> *gui, Vector2 screen_dim)
@@ -54,7 +53,7 @@ void    initialise_database(std::multimap <gui_type, gui_base *> *gui)
 {
     mINI::INIFile   file ("data/database_gui.ini");
 
-    initialise_unit_db();
+    // initialise_unit_db();
     for (int i = 0; i < 13; i++)
     {
         gui_base    *label = new gui_base;
@@ -107,16 +106,53 @@ static bool check_not_empty(std::multimap <gui_type, gui_base*> *gui)
     return (1);
 }
 
-void    edit_unit(std::multimap <gui_type, gui_base*> *gui)
+static void write_unit_db(std::multimap <gui_type, gui_base*> *gui, \
+    char **unit_db)
 {
-    if (check_not_empty(gui))
+    FILE *read_txt;
+    int id = 0;
+    int i;
+
     {
-        write_unit_db(gui);
-        initialise_unit_db();
+        gui_textbox  *textbox = dynamic_cast <gui_textbox *> \
+            (find_gui_by_id(gui, 16, G_TEXTBOX));
+        if (textbox)
+            id = atoi(textbox->get_text());
     }
+    read_txt = fopen("arrays/unit_database.txt", "w+");
+    i = 0;
+    while (i < id)
+    {
+        fprintf(read_txt, "%s", unit_db[i]);
+        i++;
+    }
+    int j = 0;
+    while (j < DATABASE_INPUTS)
+    {
+        fprintf(read_txt, "%s", find_gui_by_id(gui, 16 + j, \
+            G_TEXTBOX)->get_text());
+        if (j < 12)
+            fprintf(read_txt, "%s", ",");
+        j++;
+        if (j == DATABASE_INPUTS)
+            fprintf(read_txt, "%s", "\n");
+    }
+    i++;
+    while (i < MAX_UNITS)
+    {
+        fprintf(read_txt, "%s", unit_db[i]);
+        i++;
+    }
+    fclose(read_txt);
 }
 
-void    draw_grid(int scroll_h_offset, int scroll_v_offset)
+void    edit_unit(std::multimap <gui_type, gui_base*> *gui, char **unit_db)
+{
+    if (check_not_empty(gui))
+        write_unit_db(gui, unit_db);
+}
+
+void    draw_grid(int scroll_h_offset, int scroll_v_offset, char **unit_db)
 {
     int i;
     int j;
@@ -161,58 +197,24 @@ void    draw_grid(int scroll_h_offset, int scroll_v_offset)
     }
 }
 
-void    initialise_unit_db(void)
+char    **initialise_unit_db(void)
 {
-    int i;
-    int len;
+	int		fd;
+	char	**db;
 
-    std::ifstream input("arrays/unit_database.txt");
-    std::string line;
-    i = 0;
-    while (std::getline(input, line))
-    {
-        len = strlen(line.c_str());
-        memcpy(unit_db[i], (char *) line.c_str(), len);
-        unit_db[i][len + 1] = '\0';
-        i++;
-    }
+    db = (char **) malloc ((128) * sizeof(char *));
+	fd = open("arrays/unit_database.txt", O_RDONLY);
+	for (int i = 0; i < 128; i++)
+		db[i] = get_next_line(fd);
+	close (fd);
+    return (db);
 }
 
-void    write_unit_db(std::multimap <gui_type, gui_base*> *gui)
+void    del_db(char **unit_db)
 {
-    FILE *read_txt;
-    int id = 0;
-    int i;
-
+    for (int i = 0; i < 128; i++)
     {
-        gui_textbox  *textbox = dynamic_cast <gui_textbox *> (find_gui_by_id(gui, 16, G_TEXTBOX));
-        if (textbox)
-            id = atoi(textbox->get_text());
+        free (unit_db[i]);
     }
-    read_txt = fopen("arrays/unit_database.txt", "w+");
-    i = 0;
-    while (i < id)
-    {
-        fprintf(read_txt, "%s", unit_db[i]);
-        fprintf(read_txt, "%s", "\n");
-        i++;
-    }
-    int j = 0;
-    while (j < DATABASE_INPUTS)
-    {
-        fprintf(read_txt, "%s", find_gui_by_id(gui, 16 + j, G_TEXTBOX)->get_text());
-        if (j < 12)
-            fprintf(read_txt, "%s", ",");
-        j++;
-        if (j == DATABASE_INPUTS)
-            fprintf(read_txt, "%s", "\n");
-    }
-    i++;
-    while (i < MAX_UNITS)
-    {
-        fprintf(read_txt, "%s", unit_db[i]);
-        fprintf(read_txt, "%s", "\n");
-        i++;
-    }
-    fclose(read_txt);
+    free (unit_db);
 }
