@@ -1,7 +1,9 @@
 #include "storyboard_controls.hpp"
 
+#ifndef RAYGUI_IMPLEMENTATION
 # define RAYGUI_IMPLEMENTATION
-# include "../raylib-cpp/include/raygui.h"
+#endif
+#include "../raylib-cpp/include/raygui.h"
 
 void    set_boundaries(std::multimap <gui_type, gui_base *> *gui, \
     int off_x, int off_y, mINI::INIFile file, float scale)

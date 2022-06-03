@@ -52,7 +52,7 @@ public:
     }
     void        set_ranged(int max, int dead)
     {
-        max_range = amount;
+        max_range = max;
         dead_zone = dead;
     }
     void        set_movement(int unit, int from, int to, int direction)

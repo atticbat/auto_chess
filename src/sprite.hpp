@@ -2,7 +2,6 @@
 # define SPRITE_HPP
 
 # include "../raylib-cpp/include/raylib-cpp.hpp"
-# include "../config.hpp"
 # include "conversion_functions.hpp"
 # include "user.hpp"
 

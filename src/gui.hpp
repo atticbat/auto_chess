@@ -1,11 +1,13 @@
 #ifndef GUI_HPP
 # define GUI_HPP
 
-# include "../raylib-cpp/include/raygui.h"
-# include <stdlib.h>
 # include <map>
 # include "sprite.hpp"
-# define RAYGUI_IMPLEMENTATION
+# include "../raylib-cpp/include/raygui.h"
+
+typedef enum gui_type {G_LABEL = 0, G_DYNAMIC_LABEL, G_CHECKBOX, G_BUTTON, \
+    G_SLIDER, G_SCROLLBAR, G_DROPDOWN, G_TEXTBOX, G_DRAG_DROP, \
+    G_PROGRESS_BAR} gui_type;
 
 class gui_base
 {

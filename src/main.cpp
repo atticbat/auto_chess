@@ -24,156 +24,175 @@
 //     file.write(ini);
 // }
 
+static void enter_menu(std::multimap <gui_type, gui_base *> *gui)
+{
+    mINI::INIFile file("data/menu_gui.ini");
+
+    initialise_menu(gui);
+    set_boundaries(gui, 0, 0, file, 1);
+}
+
+static void enter_settings(std::multimap <gui_type, gui_base *> *gui, \
+    Vector2 screen_dim, Vector2 settings_dim)
+{
+    mINI::INIFile file("data/settings_gui.ini");
+
+    initialise_settings(gui);
+    set_boundaries(gui, (screen_dim.x - settings_dim.x) / 2, \
+        (screen_dim.y - settings_dim.y) / 2, file, 1);
+}
+
+static char **enter_database(std::multimap <gui_type, gui_base *> *gui, \
+    Vector2 screen_dim)
+{
+    mINI::INIFile file("data/database_gui.ini");
+
+    initialise_database(gui);
+    set_database_boundaries(gui, screen_dim); 
+    return (initialise_unit_db());
+}
+
+static void enter_new_game(std::multimap <gui_type, gui_base *> *gui, \
+    default_run **user, float scale)
+{
+    mINI::INIFile file("data/draft_gui.ini");
+
+    delete (*user);
+    *user = new default_run();
+    write_changes(*user);
+    initialise_draft(gui, *user);
+    reroll_shop(gui, *user);
+    set_boundaries(gui, 0, 0, file, scale);
+}
+
+static void enter_load(std::multimap <gui_type, gui_base *> *gui, \
+    default_run **user, float scale)
+{
+    mINI::INIFile file("data/draft_gui.ini");
+
+    load_user(*user);
+    initialise_draft(gui, *user);
+    set_boundaries(gui, 0, 0, file, scale);
+}
+
+static char **enter_simulation(std::multimap <gui_type, gui_base *> *gui, \
+    default_run *user)
+{
+    char    **unit_db;
+    // mINI::INIFile file("data/simulation_gui.ini");
+
+    unit_db = initialise_unit_db();
+    initialise_simulation(gui, user, unit_db);
+    return (unit_db);
+}
+
 int main(void)
 {
     InitWindow(0, 0, "Auto Chess");
-    game_state      current_state = LOADING;
-    int             frame_count = 0;
+    const Vector2   max_dim = { (float) GetScreenWidth(), (float) \
+        GetScreenHeight() };
     Vector2         screen_dim = get_screen_dim();
-    const Vector2   max_dim = { (float) GetScreenWidth(), (float) GetScreenHeight() };
-    float           res_multiplier = screen_dim.x / max_dim.x;
-    const Vector2   settings_dim = { 800, 450 };
-    Vector2         mouse_point = { 0.0f, 0.0f };
-    bool            exit_window = false;
-    std::multimap <gui_type, gui_base *> gui;
-    mINI::INIFile file ("data/menu_gui.ini");
-    default_run *user = new default_run();
-    char    **unit_db = NULL;
-    battle_sim  *combat_variables = NULL;
-    int     x_offset = 0;
-
-    initialise_menu(&gui);
-    set_boundaries(&gui, 0, 0, file, 1);
+    float           scale = screen_dim.x / max_dim.x;
     SetWindowSize(screen_dim.x, screen_dim.y);
     SetTargetFPS(60);
+
+    Vector2         mouse_point = { 0.0f, 0.0f };
+    const Vector2   settings_dim = { 800, 450 };
+    char            **unit_db = NULL;
+    bool            exit_window = false;
+    int             frame_count = 0;
+    default_run     *user = new default_run();
+    std::multimap <gui_type, gui_base *> gui;
+    std::multimap <particle_type, particle *> particles;
+    int             x_offset = -2000;
+    game_state      state = LOADING;
     while (!exit_window)
     {
         if (WindowShouldClose())
             exit_window = true;
         mouse_point = GetMousePosition();
         frame_count++;
-        switch(current_state)
+        switch(state)
         {
             case LOADING:
             {
                 if (frame_count > 60)
-                    current_state = MENU;
+                {
+                    state = MENU;
+                    enter_menu(&gui);
+                }
             } break;
             case MENU:
             {
-                current_state = check_gui(&gui, mouse_point, current_state, user);
-                if (current_state != MENU)
+                state = check_gui(&gui, mouse_point, state, user);
+                if (state != MENU)
                     del_gui(&gui);
-                if (current_state == SETTINGS)
-                {
-                    initialise_settings(&gui);
-                    file.reset("data/settings_gui.ini");
-                    set_boundaries(&gui, (screen_dim.x - settings_dim.x) / 2, \
-                        (screen_dim.y - settings_dim.y) / 2, file, 1);
-                }
-                else if (current_state == DATABASE)
-                {
-                    initialise_database(&gui);
-                    unit_db = initialise_unit_db();
-                    file.reset("data/database_gui.ini");
-                    set_database_boundaries(&gui, screen_dim);
-                }
-                else if (current_state == DRAFT)
-                {
-                    delete (user);
-                    user = new default_run();
-                    write_changes(user);
-                    file.reset("data/draft_gui.ini");
-                    initialise_draft(&gui, user);
-                    reroll_shop(&gui, user);
-                    set_boundaries(&gui, 0, 0, file, res_multiplier);
-                }
+                if (state == SETTINGS)
+                    enter_settings(&gui, screen_dim, settings_dim);
+                else if (state == DATABASE)
+                    unit_db = enter_database(&gui, screen_dim);
+                else if (state == DRAFT)
+                    enter_new_game(&gui, &user, scale);
             } break;
             case SETTINGS:
             {
-                current_state = check_gui(&gui, mouse_point, current_state, user);
-                res_multiplier = screen_dim.x / max_dim.x;
-                if (current_state != SETTINGS && (int)current_state < 8)
+                state = check_gui(&gui, mouse_point, state, user);
+                scale = screen_dim.x / max_dim.x;
+                if (state != SETTINGS && (int)state < 8)
                     del_gui(&gui);
-                if (current_state == MENU)
-                {
-                    file.reset("data/menu_gui.ini");
-                    initialise_menu(&gui);
-                    set_boundaries(&gui, 0, 0, file, 1);
-                }
-                if (current_state == DRAFT)
-                {
-                    file.reset("data/draft_gui.ini");
-                    initialise_draft(&gui, user);
-                    set_boundaries(&gui, 0, 0, file, 1);
-                }
+                if (state == MENU)
+                    enter_menu(&gui);
+                if (state == DRAFT)
+                    enter_load(&gui, &user, scale);
             } break;
             case LOAD:
             {
-                current_state = DRAFT;
-                load_user(user);
-                file.reset("data/draft_gui.ini");
-                initialise_draft(&gui, user);
-                set_boundaries(&gui, 0, 0, file, res_multiplier);
+                enter_load(&gui, &user, scale);
+                state = DRAFT;
             } break ;
             case DRAFT:
             {
                 write_changes(user);
-                current_state = check_gui(&gui, mouse_point, current_state, user);
-                if (current_state != DRAFT && (int)current_state < 8)
+                state = check_gui(&gui, mouse_point, state, user);
+                if (state != DRAFT && (int)state < 8)
                 {
                     del_sprites(&gui);
                     del_gui(&gui);
                 }
-                if (current_state == MENU)
-                {
-                    file.reset("data/menu_gui.ini");
-                    initialise_menu(&gui);
-                    set_boundaries(&gui, 0, 0, file, 1);
-                }
-                if (current_state == SETTINGS)
-                {
-                    initialise_settings(&gui);
-                    file.reset("data/settings_gui.ini");
-                    set_boundaries(&gui, (screen_dim.x - settings_dim.x) / 2, \
-                        (screen_dim.y - settings_dim.y) / 2, file, 1);
-                }
-                if (current_state == SIMULATION)
-                {
-                    combat_variables = new battle_sim;
-                }
+                if (state == MENU)
+                    enter_menu(&gui);
+                if (state == SETTINGS)
+                    enter_settings(&gui, screen_dim, settings_dim);
+                if (state == SIMULATION)
+                    unit_db = enter_simulation(&gui, user);
             } break;
             case SIMULATION:
             {
-                simulation(&x_offset);
+                simulation(&particles, &x_offset, frame_count);
             } break;
             case DATABASE:
             {
-                current_state = check_gui(&gui, mouse_point, current_state, user);
-                if (current_state != DATABASE && (int)current_state < 8)
+                state = check_gui(&gui, mouse_point, state, user);
+                if (state != DATABASE && (int)state < 8)
                 {
                     del_db(unit_db);
                     unit_db = NULL;
                     del_gui(&gui);
                 }
-                if (current_state == MENU)
-                {
-                    file.reset("data/menu_gui.ini");
-                    initialise_menu(&gui);
-                    set_boundaries(&gui, 0, 0, file, 1);
-                }
+                if (state == MENU)
+                    enter_menu(&gui);
             } break;
             case APPLY:
             {
                 apply_settings(&gui, &screen_dim, max_dim, settings_dim);
-                current_state = SETTINGS;
+                state = SETTINGS;
             } break ;
             case EDIT_UNIT:
             {
                 edit_unit(&gui, unit_db);
                 del_db(unit_db);
                 unit_db = initialise_unit_db();
-                current_state = DATABASE;
+                state = DATABASE;
             } break ;
             case REROLL:
             {
@@ -182,7 +201,7 @@ int main(void)
                     reroll_shop(&gui, user);
                     user->deduct_gold(1);
                 }
-                current_state = DRAFT;
+                state = DRAFT;
             } break ;
             case EXIT:
             {
@@ -191,7 +210,7 @@ int main(void)
             default: break;
         }
         BeginDrawing();
-            switch (current_state)
+            switch (state)
             {
                 case LOADING:
                 {
@@ -217,19 +236,23 @@ int main(void)
                 case DRAFT:
                 {
                     ClearBackground(RAYWHITE);
-                    DrawRectangle(0, screen_dim.y * 0.75, screen_dim.x, screen_dim.y * 0.25, BROWN);
+                    DrawRectangle(0, screen_dim.y * 0.75, screen_dim.x, \
+                        screen_dim.y * 0.25, BROWN);
                     draw_gui(&gui, screen_dim, settings_dim, mouse_point);
                 } break;
                 case SIMULATION:
                 {
                     ClearBackground(RAYWHITE);
-                    draw_simulation(x_offset);
+                    draw_simulation(&particles, x_offset);
+                    draw_gui(&gui, screen_dim, settings_dim, mouse_point);
                 } break;
                 case EDIT_UNIT:
                 case DATABASE:
                 {
                     ClearBackground(RAYWHITE);
-                    DrawRectangle(0, 0, screen_dim.x, 64 * (((DATABASE_INPUTS) * 160) / (screen_dim.x - 160)) + 96, LIME);
+                    DrawRectangle(0, 0, screen_dim.x, 64 * (((\
+                    DATABASE_INPUTS) * 160) / (screen_dim.x - 160)) \
+                        + 96, LIME);
                     draw_gui(&gui, screen_dim, settings_dim, mouse_point);
                     draw_grid(check_scrollbar_x(find_gui_by_id(&gui, 15, \
                         G_SCROLLBAR)), check_scrollbar_y(find_gui_by_id(&gui, \

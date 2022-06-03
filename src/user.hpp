@@ -7,7 +7,7 @@
 class default_run
 {
 private:
-    int     gold = 3;
+    int     gold = 10;
     int     level = 1;
     int     exp = 0;
     int     exp_cap = 8;
