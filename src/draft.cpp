@@ -5,7 +5,7 @@ void    initialise_draft (std::multimap <gui_type, gui_base *> *gui, \
 {
     mINI::INIFile    file ("data/draft_gui.ini");
     int             label_defaults[9] = {12, 1, 80, 20, 0, 0, 0, 0, 0};
-    int             available_units[2] = { 1, 32 };
+    int             available_units[5] = { 1, 3, 4, 5, 32 };
 
     for (int i = 0; i < 9; i++)
     {
@@ -43,7 +43,7 @@ void    initialise_draft (std::multimap <gui_type, gui_base *> *gui, \
         gui_drag_drop   *drag_drop = new gui_drag_drop;
         drag_drop->set_unit_id(user->get_roster_slot(i - 19));
         if (drag_drop->get_unit_id())
-            drag_drop->generate_static_sprite (drag_drop->get_unit_id(), 1);
+            drag_drop->generate_static_sprite (drag_drop->get_unit_id(), 2, file);
         drag_drop->set_text(i - 14, 8, 24, file);
         drag_drop->set_id(i);
         drag_drop->set_display(true);
@@ -61,7 +61,7 @@ void    reroll_shop(std::multimap <gui_type, gui_base *> *gui, default_run \
     *user)
 {
     mINI::INIFile   file ("data/draft_gui.ini");
-    int             available_units[2] = { 1, 32 };
+   int              available_units[5] = { 1, 3, 4, 5, 32 };
     auto            range = gui->equal_range(G_DRAG_DROP);
 
     for (auto i = range.first; i != range.second; ++i)
@@ -73,7 +73,7 @@ void    reroll_shop(std::multimap <gui_type, gui_base *> *gui, default_run \
 
             if (drag_drop && !(drag_drop->get_display()))
             {
-                drag_drop->set_unit_id(available_units[rand() % 2]);
+                drag_drop->set_unit_id(available_units[rand() % 5]);
                 user->set_store(drag_drop->get_gui_id(), \
                     drag_drop->get_unit_id());
             }

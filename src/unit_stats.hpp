@@ -12,7 +12,7 @@ private:
     float       gauges[3] = { 0, 0, 0 };
     float       max_gauges[3] = { 100, 100, 100 };
     Rectangle   bounds;
-    int         unique_id;
+    int         unique_id = 0;
     int         unit_id = 0;
     int         attack = 0;
     int         health = 0;
@@ -40,7 +40,8 @@ private:
 public:
     void initialise_unit (int id, char **unit_db, bool ally, int pos)
     {
-        static int  _unique_id = 0;
+
+        static int  _unique_id = 1;
         char        *line = unit_db[id];
         char        **split = ft_split(line, ',');
         int         range;
@@ -95,6 +96,8 @@ public:
         for (int i = 0; i < 13; i++)
             free(split[i]);
         free (split);
+
+
     }
     Rectangle   get_gauge_bounds(int index)
     {

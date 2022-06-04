@@ -29,6 +29,7 @@ static int  handle_drop(std::multimap <gui_type, gui_base *> *gui, \
     gui_drag_drop *drag, int overlapped, default_run *user)
 {
     int swap = 0;
+    mINI::INIFile file ("data/draft_gui.ini");
     gui_drag_drop   *drop = dynamic_cast <gui_drag_drop *>\
         (find_gui_by_id(gui, overlapped, G_DRAG_DROP));
 
@@ -38,7 +39,7 @@ static int  handle_drop(std::multimap <gui_type, gui_base *> *gui, \
             return (0);
         drop->remove_sprite();
         if (drop->get_display())
-            drop->generate_static_sprite(drag->get_sprite_id(), 1);
+            drop->generate_static_sprite(drag->get_sprite_id(), 2, file);
         swap = drag->get_sprite_id();
         drag->set_sprite_id(drop->get_unit_id());
         drop->set_unit_id(swap);
@@ -52,16 +53,20 @@ static int  handle_drop(std::multimap <gui_type, gui_base *> *gui, \
 static void drag_drop_controls(std::multimap <gui_type, gui_base *> *gui, \
     gui_drag_drop *drag, Vector2 mouse_point, default_run *user)
 {
+    mINI::INIFile file ("data/draft_gui.ini");
     int price_guide[33];
     price_guide[0] = 0;
     price_guide[1] = 1;
+    price_guide[3] = 1;
+    price_guide[4] = 1;
+    price_guide[5] = 1;
     price_guide[32] = 2;
 
     if (drag && CheckCollisionPointRec(mouse_point, drag->get_bounds()) && \
         IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && drag->get_unit_id())
     {
         drag->remove_sprite();
-        drag->generate_picked_up_sprite(drag->get_sprite_id(), 1);
+        drag->generate_picked_up_sprite(drag->get_sprite_id(), 2, file);
         drag->set_is_picked_up(true);
     }
     if (drag && IsMouseButtonReleased(MOUSE_LEFT_BUTTON) && \
@@ -87,7 +92,7 @@ static void drag_drop_controls(std::multimap <gui_type, gui_base *> *gui, \
         drag->set_unit_id(drag->get_sprite_id());
         drag->remove_sprite();
         if (drag->get_display() && drag->get_unit_id())
-            drag->generate_static_sprite(drag->get_unit_id(), 1);
+            drag->generate_static_sprite(drag->get_unit_id(), 2, file);
     }
 }
 
@@ -119,12 +124,19 @@ void    check_drag_drops(std::multimap <gui_type, gui_base *> *gui, \
     Vector2 mouse_point, default_run *user)
 {
     auto range = gui->equal_range(G_DRAG_DROP);
+    static int  timer = 0;
 
+    timer++;
     for (auto i = range.first; i != range.second; ++i)
     {
         gui_drag_drop   *drag = dynamic_cast <gui_drag_drop *> (i->second);
 
         if (drag && (drag->get_unit_id() || drag->get_sprite_id()))
             drag_drop_controls(gui, drag, mouse_point, user);
+        if (drag && timer % 20 == 0)
+        {
+            drag->increment_state();
+            timer = 0;
+        }
     }
 }

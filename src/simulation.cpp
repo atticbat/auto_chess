@@ -6,16 +6,38 @@ unit_stats  battle[56];
 int         move_order[56];
 
 void    initialise_simulation(std::multimap <gui_type, gui_base *> *gui, \
-    default_run *user, char **unit_db)
+    std::map <int, sprite_multi *> *sprites, default_run *user, char **unit_db)
 {
     std::random_device rnd;
     std::mt19937 g(rnd());
+    mINI::INIFile file ("data/simulation_gui.ini");
 
     for (int i = 0; i < 8; i++)
-        battle[16 + i].initialise_unit(user->get_roster_slot(i), unit_db, \
-            true, i);
-    battle[39].initialise_unit(84, unit_db, false, 1);
-    battle[38].initialise_unit(83, unit_db, false, 2);
+    {
+        if (user->get_roster_slot(i))
+        {
+            battle[16 + i].initialise_unit(user->get_roster_slot(i), unit_db, \
+                true, i);
+            sprite_multi    *sprite = new sprite_multi(\
+                battle[16 + i].get_unit_id(), 9, 1, file);
+
+            sprites->insert(std::pair <int, sprite_multi *> \
+                (battle[16 + i].get_unique_id(), sprite));
+        }
+    }
+    for (int i = 0; i < 8; i++)
+    {
+        if (user->get_roster_slot(i))
+        {
+            battle[40 - i].initialise_unit(user->get_roster_slot(i), unit_db, \
+                false, i);
+            sprite_multi    *sprite = new sprite_multi(\
+                battle[40 - i].get_unit_id(), 9, 5, file);
+
+            sprites->insert(std::pair <int, sprite_multi *> \
+                (battle[40 - i].get_unique_id(), sprite));
+        }
+    }
     for (int i = 0; i < 56; i++)
         move_order[i] = i;
     std::shuffle(&move_order[0], &move_order[55], g);
@@ -34,7 +56,7 @@ static int  scroll_controls(int x_offset)
     return (0);
 }
 
-static void unit_movement(int i)
+static void unit_movement(int i, sprite_multi *sprite)
 {
     if (!(battle[i].get_is_moving()) && battle[i].get_unit_id() \
         && battle[i + battle[i].get_direction()].get_unit_id() == 0)
@@ -43,7 +65,12 @@ static void unit_movement(int i)
         battle[i].set_is_moving(true);
         std::swap(battle[i], battle[i + \
             battle[i].get_direction()]);
-    } 
+        if (sprite->get_animation() != 2 && sprite->get_animation() != 1)
+            sprite->change_animation(2);
+    }
+    else if (battle[i].get_to_move() == 0 && !(battle[i].get_is_moving()) && \
+        sprite->get_animation() == 2)
+        sprite->change_animation(0);
 }
 
 static void perform_attack(std::multimap <particle_type, particle *> \
@@ -63,18 +90,19 @@ static void perform_attack(std::multimap <particle_type, particle *> \
 }
 
 static void unit_melee_attack(std::multimap <particle_type, particle *> \
-    *particles, int i, int x_offset)
+    *particles, int i, int x_offset, sprite_multi *sprite)
 {
     if (battle[i].get_unit_id() && battle[i].get_perform_attack() && \
         battle[i].get_allied() != battle[i + battle[i].get_direction()].\
         get_allied() && battle[i + battle[i].get_direction()].get_unit_id())
     {
         perform_attack(particles, i, i + battle[i].get_direction(), x_offset);
+        sprite->change_animation(1);
     }
 }
 
 static void unit_ranged_attack(std::multimap <particle_type, particle *> \
-    *particles, int i, int x_offset)
+    *particles, int i, int x_offset, sprite_multi *sprite)
 {
     if (battle[i].get_unit_id() && battle[i].get_max_range() > 1 && \
         battle[i].get_perform_attack())
@@ -93,11 +121,12 @@ static void unit_ranged_attack(std::multimap <particle_type, particle *> \
             std::random_shuffle(viable_targets.begin(), \
                 viable_targets.end());
             particle_projectile *projectile = new particle_projectile(BLACK, \
-                battle[i], battle[viable_targets.front()], x_offset);
+                battle[i], battle[viable_targets.front()], x_offset + 64);
 
             particles->insert(std::pair<particle_type, particle_projectile *> \
                 (P_PROJECTILE, projectile));
             battle[i].set_projectile_mid_flight(true);
+            sprite->change_animation(1);
         }
     }
 }
@@ -113,22 +142,31 @@ static int  find_unit_by_unique_id(int unique_id)
 }
 
 game_state  simulation(std::multimap <particle_type, particle *> *particles, \
-    int *x_offset, int frame_count)
+    std::map <int, sprite_multi *> *sprites, int *x_offset, int frame_count)
 {
     *x_offset += scroll_controls(*x_offset);
-    if (frame_count % 16 == 0)
+    if (frame_count % 8 == 0)
     {
         for (int i = 0; i < 56; i++)
         {
             int j = move_order[i];
-            unit_movement(j);
-            battle[j].increase_atk_gauge();
-            unit_melee_attack(particles, j, *x_offset);
-            if (!(battle[j].get_projectile_mid_flight()))
-                unit_ranged_attack(particles, j, *x_offset);
-            if (battle[j].get_is_dead())
-                battle[j].destroy_unit();
+            auto    search = sprites->find(battle[j].get_unique_id());
+            if (search != sprites->end())
+            {
+                unit_movement(j, search->second);
+                battle[j].increase_atk_gauge();
+                unit_melee_attack(particles, j, *x_offset, search->second);
+                if (!(battle[j].get_projectile_mid_flight()))
+                    unit_ranged_attack(particles, j, *x_offset, search->second);
+                if (battle[j].get_is_dead())
+                {
+                    battle[j].destroy_unit();
+                    search->second->set_despawn();
+                }
+            }
         }
+        for (auto i = sprites->begin(); i != sprites->end(); ++i)
+            i->second->increment_state();
     }
     for (int i = 0; i < 56; i++)
     {
@@ -165,9 +203,12 @@ game_state  simulation(std::multimap <particle_type, particle *> *particles, \
                             projectile->get_attacker_unique_id());
                         int tgt_index = find_unit_by_unique_id(\
                             projectile->get_target_unique_id());
-                        perform_attack(particles, atk_index, \
-                            tgt_index, *x_offset);
-                        battle[atk_index].set_projectile_mid_flight(false);
+                        if (atk_index > 0 && tgt_index > 0)
+                        {
+                            perform_attack(particles, atk_index, \
+                                tgt_index, *x_offset);
+                            battle[atk_index].set_projectile_mid_flight(false);
+                        }
                     }
                     projectile->update_bounds(*x_offset);
                 }
@@ -202,7 +243,7 @@ static void despawn_particles(std::multimap <particle_type, particle *> *particl
 }
 
 void    draw_simulation(std::multimap <particle_type, particle *> *particles, \
-    int x_offset)
+    std::map <int, sprite_multi *> *sprites, int x_offset)
 {
     for (int i = 0; i < 56; i++)
     {
@@ -217,14 +258,22 @@ void    draw_simulation(std::multimap <particle_type, particle *> *particles, \
                     battle[i].get_gauge_colour(j));
             }
         }
-        if (battle[i].get_unit_id() && battle[i].get_allied())
-            DrawRectangle(battle[i].get_bounds().x + x_offset, \
-                battle[i].get_bounds().y, battle[i].get_bounds().width, \
-                battle[i].get_bounds().height, BLUE);
-        else if (battle[i].get_unit_id())
-            DrawRectangle(battle[i].get_bounds().x + x_offset, \
-                battle[i].get_bounds().y, battle[i].get_bounds().width, \
-                battle[i].get_bounds().height, RED); 
+        // if (battle[i].get_unit_id() && battle[i].get_allied())
+        //     DrawRectangle(battle[i].get_bounds().x + x_offset, \
+        //         battle[i].get_bounds().y, battle[i].get_bounds().width, \
+        //         battle[i].get_bounds().height, BLUE);
+        // else if (battle[i].get_unit_id())
+        //     DrawRectangle(battle[i].get_bounds().x + x_offset, \
+        //         battle[i].get_bounds().y, battle[i].get_bounds().width, \
+        //         battle[i].get_bounds().height, RED); 
+        if (battle[i].get_unit_id())
+        {
+            auto    search = sprites->find(battle[i].get_unique_id());
+
+            if (search != sprites->end())
+                DrawTextureRec(search->second->get_image(), search->second->get_source(), \
+                    (Vector2) { battle[i].get_bounds().x + x_offset - 96, battle[i].get_bounds().y }, WHITE);
+        }
         DrawText(TextFormat("%i", move_order[i]), 128 * i + x_offset + 4, \
             404, 24, BLACK);
         DrawRectangleLines(128 * i + x_offset, 400, 128, 256, BLACK);

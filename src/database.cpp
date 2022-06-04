@@ -180,14 +180,14 @@ void    draw_grid(int scroll_h_offset, int scroll_v_offset, char **unit_db)
                 l = 0;
                 ft_itoa(j, int_str2);
                 DrawText(ini.get("DatabaseColumns").get(int_str2).c_str(), \
-                    192 + 112 * j + scroll_h_offset, 192 + i * 20 + \
+                    256 + 112 * j + scroll_h_offset, 192 + i * 20 + \
                     scroll_v_offset, 16, BLACK);
                 j++;
             }
             else if (unit_db[i][k] >= '0' && unit_db[i][k] <= '9')
             {
                 DrawTextCodepoint(GetFontDefault(), unit_db[i][k], (Vector2) \
-                    { (float)(256 + 112 * j + 9 * l + scroll_h_offset), \
+                    { (float)(328 + 112 * j + 9 * l + scroll_h_offset), \
                     (float)(192 + i * 20) + scroll_v_offset }, 16, BLACK);
                 l++;
             }

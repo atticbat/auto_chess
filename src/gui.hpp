@@ -271,14 +271,15 @@ private:
 public:
     void        set_is_picked_up (bool _is_picked) { is_picked = _is_picked; }
     bool        get_is_picked_up (void) { return (is_picked); }
-    void        generate_picked_up_sprite (int id, int frames)
+    void        generate_picked_up_sprite (int id, int frames, mINI::INIFile \
+        file)
     {
-        sprite = new sprite_picked_up(unit_id, frames, 1);
+        sprite = new sprite_picked_up(unit_id, frames, 1, file);
         unit_id = 0;
     }
-    void        generate_static_sprite (int id, int frames)
+    void        generate_static_sprite (int id, int frames, mINI::INIFile file)
     {
-        sprite = new sprite_base(id, frames, 2);
+        sprite = new sprite_base(id, frames, 2, file);
     }
     void        remove_sprite(void)
     {
@@ -297,7 +298,8 @@ public:
                 picked_up->get_offset_location(point), WHITE);
         else
             DrawTextureRec(sprite->get_image(), sprite->get_source(), \
-                Vector2 {bounds.x + (bounds.width - sprite->get_width()) / 2, bounds.y - sprite->get_image().height * 3/4}, WHITE);
+                Vector2 {bounds.x + (bounds.width - sprite->get_width()) / 2, \
+                bounds.y - sprite->get_image().height * 3/4}, WHITE);
                 //change inbound: move bottom of sprite y to middle of gui y
     }
     void        set_unit_id(int id) { unit_id = id; }
@@ -307,6 +309,11 @@ public:
         if (sprite)
             return (sprite->get_unit_id());
         return (0);
+    }
+    void        increment_state(void)
+    {
+        if (sprite)
+            sprite->increment_state();
     }
     void        set_sprite_id(int id) { sprite->set_unit_id(id); }
     void        set_display(bool _display) { display = _display; }

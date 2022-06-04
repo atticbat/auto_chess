@@ -24,12 +24,25 @@
 //     file.write(ini);
 // }
 
+static void change_settings_return(int new_destination)
+{
+    mINI::INIFile file ("data/settings_gui.ini");
+    mINI::INIStructure ini;
+    char    buffer[5];
+
+    ft_itoa(new_destination, buffer);
+    file.read(ini);
+    ini["ButtonDestination"]["0"] = buffer;
+    file.write(ini);
+}
+
 static void enter_menu(std::multimap <gui_type, gui_base *> *gui)
 {
     mINI::INIFile file("data/menu_gui.ini");
 
     initialise_menu(gui);
     set_boundaries(gui, 0, 0, file, 1);
+    change_settings_return(1);
 }
 
 static void enter_settings(std::multimap <gui_type, gui_base *> *gui, \
@@ -63,6 +76,7 @@ static void enter_new_game(std::multimap <gui_type, gui_base *> *gui, \
     initialise_draft(gui, *user);
     reroll_shop(gui, *user);
     set_boundaries(gui, 0, 0, file, scale);
+    change_settings_return(7);
 }
 
 static void enter_load(std::multimap <gui_type, gui_base *> *gui, \
@@ -73,16 +87,17 @@ static void enter_load(std::multimap <gui_type, gui_base *> *gui, \
     load_user(*user);
     initialise_draft(gui, *user);
     set_boundaries(gui, 0, 0, file, scale);
+    change_settings_return(7);
 }
 
 static char **enter_simulation(std::multimap <gui_type, gui_base *> *gui, \
-    default_run *user)
+    std::map <int, sprite_multi *> *sprites, default_run *user)
 {
     char    **unit_db;
     // mINI::INIFile file("data/simulation_gui.ini");
 
     unit_db = initialise_unit_db();
-    initialise_simulation(gui, user, unit_db);
+    initialise_simulation(gui, sprites, user, unit_db);
     return (unit_db);
 }
 
@@ -104,6 +119,7 @@ int main(void)
     default_run     *user = new default_run();
     std::multimap <gui_type, gui_base *> gui;
     std::multimap <particle_type, particle *> particles;
+    std::map <int, sprite_multi *> sprites;
     int             x_offset = -2000;
     game_state      state = LOADING;
     while (!exit_window)
@@ -164,11 +180,11 @@ int main(void)
                 if (state == SETTINGS)
                     enter_settings(&gui, screen_dim, settings_dim);
                 if (state == SIMULATION)
-                    unit_db = enter_simulation(&gui, user);
+                    unit_db = enter_simulation(&gui, &sprites, user);
             } break;
             case SIMULATION:
             {
-                simulation(&particles, &x_offset, frame_count);
+                simulation(&particles, &sprites, &x_offset, frame_count);
             } break;
             case DATABASE:
             {
@@ -243,7 +259,7 @@ int main(void)
                 case SIMULATION:
                 {
                     ClearBackground(RAYWHITE);
-                    draw_simulation(&particles, x_offset);
+                    draw_simulation(&particles, &sprites, x_offset);
                     draw_gui(&gui, screen_dim, settings_dim, mouse_point);
                 } break;
                 case EDIT_UNIT:
