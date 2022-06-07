@@ -50,14 +50,8 @@ void    initialise_settings(std::multimap <gui_type, gui_base *> *gui)
         gui->insert(std::pair<gui_type, gui_base *> (G_CHECKBOX, checkbox));
     }
     for (int i = 7; i < 9; i++)
-    {
-        gui_button  *button = new gui_button;
-
-        button->set_text(i - 7, 3, 24, file);
-        button->set_destination(parse_destination(i - 7, file));
-        button->set_id(i);
-        gui->insert(std::pair<gui_type, gui_base *> (G_BUTTON, button));
-    }
+        gui->insert(std::pair<gui_type, gui_base *> (G_BUTTON, \
+            generate_button(i - 7, file)));
     {
         gui_slider  *slider =  new gui_slider(50, 0, 100);
 

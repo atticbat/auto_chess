@@ -12,6 +12,8 @@ private:
     int     exp = 0;
     int     exp_cap = 8;
     int     roster[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+    int     unit_exp[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+    int     unit_max_exp[8] = { 2, 2, 2, 2, 2, 2, 2, 2 };
     int     store[5] = { 0, 0, 0, 0, 0 };
     int     wins = 0;
     int     losses = 0;
@@ -19,7 +21,10 @@ public:
     int     get_gold(void) { return (gold); }
     int     get_level(void) { return (level); }
     int     get_exp(void) { return (exp); }
+    int     get_exp_cap(void) { return (exp_cap); }
     int     get_roster_slot(int slot) { return (roster[slot]); }
+    int     get_unit_xp(int slot) { return (unit_exp[slot]); }
+    int     get_unit_max_xp(int slot) { return (unit_max_exp[slot]); }
     int     get_store_slot(int slot) { return (store[slot]); }
     int     get_wins(void) { return (wins); }
     int     get_losses(void) { return (losses); }
@@ -31,7 +36,7 @@ public:
     void    add_exp(int amount)
     {
         exp += amount;
-        if (exp > exp_cap)
+        if (exp >= exp_cap)
         {
             exp = exp % exp_cap;
             exp_cap += 4;
@@ -39,7 +44,24 @@ public:
         }
     }
     void    set_exp(int amount) { exp = amount; }
+    void    set_exp_cap(int amount) { exp_cap = amount; }
     void    set_unit(int slot, int id) { roster[slot] = id; }
+    void    set_unit_exp(int slot, int _exp) { unit_exp[slot] = _exp; }
+    void    set_unit_max_exp(int slot, int _exp) { unit_max_exp[slot] = _exp; }
+    void    add_unit_exp(int slot)
+    {
+        unit_exp[slot]++;
+        if (unit_exp[slot] >= unit_max_exp[slot])
+        {
+            unit_exp[slot] %= unit_max_exp[slot];
+            unit_max_exp[slot] = 4;
+            if (roster[slot] >= 1 && roster[slot] <= 40)
+                roster[slot] += 12;
+            else if (roster[slot] >= 41 && roster[slot] <= 70)
+                roster[slot] += 10;
+        }
+
+    }
     void    set_store (int slot, int id) { store[slot] = id; }
     void    set_wins(int amount) { wins = amount; }
     void    add_win(void) { wins++; }

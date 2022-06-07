@@ -8,6 +8,14 @@ void    set_button(gui_base *gui, bool pressed)
         button->set_checked(pressed);
 }
 
+gui_button  *generate_button(int i, mINI::INIFile file)
+{
+    gui_button  *button = new gui_button;
+
+    button->set_text(i, 3, 24, file);
+    button->set_destination(parse_destination(i, file));
+    return (button);
+}
 
 game_state  check_button_destination(gui_base *gui)
 {

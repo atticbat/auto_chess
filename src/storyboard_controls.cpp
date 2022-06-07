@@ -16,6 +16,15 @@ void    set_boundaries(std::multimap <gui_type, gui_base *> *gui, \
     }
 }
 
+static void draw_sprites(std::multimap <gui_type, gui_base *> *gui, \
+    Vector2 mouse_point)
+{
+    auto    range = gui->equal_range(G_DRAG_DROP);
+
+    for (auto i = range.first; i != range.second; ++i)
+        draw_drag_drops(i->second, mouse_point);
+}
+
 void    draw_gui(std::multimap <gui_type, gui_base *> *gui, Vector2 \
     screen_dim, Vector2 set_dim, Vector2 mouse_point)
 {
@@ -24,57 +33,69 @@ void    draw_gui(std::multimap <gui_type, gui_base *> *gui, Vector2 \
     {
         switch (i->first)
         {
-            case (G_LABEL):
-            case (G_DYNAMIC_LABEL):
+            case G_LABEL:
+            case G_DYNAMIC_LABEL:
             {
                 DrawText(i->second->get_text(), i->second->get_bounds().x, \
                     i->second->get_bounds().y, i->second->get_text_size(), \
                     BLACK);
             } break ;
-            case (G_CHECKBOX):
+            case G_HITBOX:
+            {
+                GuiDrawRectangle(i->second->get_bounds(), 0, BLACK, BEIGE);
+                DrawText(i->second->get_text(), i->second->get_bounds().x + 16, \
+                    i->second->get_bounds().y + 32, i->second->get_text_size(), \
+                    BLACK); 
+            } break ;
+            case G_CHECKBOX:
             {
                 set_checkbox(i->second, GuiCheckBox(i->second->get_bounds(), \
                     i->second->get_text(), check_checkbox(i->second)));
             } break ;
-            case (G_BUTTON):
+            case G_BUTTON:
             {
                 set_button(i->second, GuiButton(i->second->get_bounds(), \
                     i->second->get_text()));
             } break ;
-            case (G_SLIDER):
+            case G_SLIDER:
             {
                 set_slider(i->second, GuiSliderBar(i->second->get_bounds(), \
                     NULL, NULL, check_slider_value(i->second), \
                     check_slider_min(i->second), check_slider_max(i->second)));
             } break ;
-            case (G_SCROLLBAR):
+            case G_SCROLLBAR:
             {
                 GuiScrollPanel(i->second->get_bounds(), NULL, \
                     check_scrollbar_content(i->second), \
                     get_scrollbar_scroll(i->second));
             } break ;
-            case (G_DROPDOWN):
+            case G_DROPDOWN:
             {
                 draw_dropdowns(i->second);
             } break ;
-            case (G_TEXTBOX):
+            case G_TEXTBOX:
             {
                 draw_textbox(i->second);
             } break ;
-            case (G_DRAG_DROP):
+            case G_DRAG_DROP:
             {
                 GuiDrawRectangle(i->second->get_bounds(), 1, BLACK, RAYWHITE);
-                draw_drag_drops(i->second, mouse_point);
+
             } break ;
-            case (G_PROGRESS_BAR):
+            case G_PROGRESS_BAR:
             {
-                //to do
-                ;
+                gui_progress_bar    *bar = dynamic_cast <gui_progress_bar *> (i->second);
+
+                if (bar)
+                    GuiProgressBar(bar->get_bounds(), NULL, NULL, \
+                        bar->get_value(), bar->get_min(), bar->get_max());
             } break ;
             default: break ;
         }
     }
+    draw_sprites(gui, mouse_point);
 }
+
 
 gui_base    *find_gui_by_id(std::multimap <gui_type, gui_base*> *gui, \
     int id, gui_type state)

@@ -7,7 +7,7 @@
 
 typedef enum gui_type {G_LABEL = 0, G_DYNAMIC_LABEL, G_CHECKBOX, G_BUTTON, \
     G_SLIDER, G_SCROLLBAR, G_DROPDOWN, G_TEXTBOX, G_DRAG_DROP, \
-    G_PROGRESS_BAR} gui_type;
+    G_PROGRESS_BAR, G_HITBOX} gui_type;
 
 class gui_base
 {
@@ -24,7 +24,7 @@ protected:
     const char  *bound_modes[11] = {"LabelBounds", "DynamicLabelBounds", \
         "CheckBoxBounds", "ButtonBounds", "SliderBounds", "ScrollbarBounds", \
         "DropdownBounds", "TextboxBounds", "DragDropBounds", \
-        "ProgressBarBounds", "dummy"};
+        "ProgressBarBounds", "HitboxBounds"};
 public:
     ~gui_base()
     {
@@ -86,6 +86,7 @@ public:
         text = ptr;
     }
     void                set_id(int id) { unique_id = id; }
+    void                set_gui_id(int id) { gui_id = id; }
     Rectangle           get_bounds(void) { return (bounds); }
     virtual char        *get_text(void) { return (text); }
     int                 get_id(void) { return (unique_id); }
@@ -170,6 +171,8 @@ public:
         max = _max;
     }
     void        set_value(float _value) { value = _value; }
+    void        set_max(float _value) { max = _value; }
+    void        set_min(float _value) { min = _value; }
     float       get_value(void) { return (value); }
     float       get_min(void) { return (min); }
     float       get_max(void) { return (max); }
@@ -293,14 +296,18 @@ public:
     {
         sprite_picked_up    *picked_up = static_cast <sprite_picked_up *> (sprite);
 
-        if (picked_up && point.x != 0 && point.y != 0)
-            DrawTextureRec(picked_up->get_image(), picked_up->get_source(), \
-                picked_up->get_offset_location(point), WHITE);
-        else
-            DrawTextureRec(sprite->get_image(), sprite->get_source(), \
-                Vector2 {bounds.x + (bounds.width - sprite->get_width()) / 2, \
-                bounds.y - sprite->get_image().height * 3/4}, WHITE);
-                //change inbound: move bottom of sprite y to middle of gui y
+        DrawTexturePro(picked_up->get_image(), picked_up->get_source(), \
+            picked_up->get_boundaries(point), \
+            picked_up->get_offset_location(point), 0, RAYWHITE);
+        // DrawTextureEx(picked_up->get_image(), picked_up->get_offset_location(point), 0, 0.5, RAYWHITE);
+        // if (picked_up && point.x != 0 && point.y != 0)
+        //     DrawTextureRec(picked_up->get_image(), picked_up->get_source(), \
+        //         picked_up->get_offset_location(point), WHITE);
+        // else
+        //     DrawTextureRec(sprite->get_image(), sprite->get_source(), \
+        //         Vector2 {bounds.x + (bounds.width - sprite->get_width()) / 2, \
+        //         bounds.y - sprite->get_image().height * 3/4}, WHITE);
+        //         //change inbound: move bottom of sprite y to middle of gui y
     }
     void        set_unit_id(int id) { unit_id = id; }
     int         get_unit_id(void) { return (unit_id); }
@@ -352,6 +359,15 @@ public:
         text_right = ptr;
     }
     char    *get_text_right(void) { return (text_right); }
+    void    increment_value(void)
+    {
+        value++;
+        if (value >= max)
+        {
+            value = 0;
+            max = 4;
+        }
+    }
 };
 
 #endif

@@ -219,6 +219,28 @@ int main(void)
                 }
                 state = DRAFT;
             } break ;
+            case BUY_XP:
+            {
+                if (user->get_gold() > 0)
+                {
+                    user->deduct_gold(1);
+                    user->add_exp(2);
+                    gui_progress_bar *bar = dynamic_cast <gui_progress_bar *> \
+                    (find_gui_by_id(&gui, 36, G_PROGRESS_BAR));
+
+                    if (bar)
+                    {
+                        bar->set_value(user->get_exp());
+                        bar->set_max(user->get_exp_cap());
+                    }
+                    gui_dynamic_label   *label = dynamic_cast <gui_dynamic_label *> \
+                        (find_gui_by_id(&gui, 1, G_DYNAMIC_LABEL));
+                    
+                    if (label)
+                        label->update_text(user->get_level(), false);
+                }
+                state = DRAFT;
+            } break ;
             case EXIT:
             {
                 exit_window = true;

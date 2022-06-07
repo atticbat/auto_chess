@@ -150,6 +150,8 @@ game_state  simulation(std::multimap <particle_type, particle *> *particles, \
         for (int i = 0; i < 56; i++)
         {
             int j = move_order[i];
+            if (j < 8 || j > 48)
+                continue;
             auto    search = sprites->find(battle[j].get_unique_id());
             if (search != sprites->end())
             {
@@ -258,14 +260,6 @@ void    draw_simulation(std::multimap <particle_type, particle *> *particles, \
                     battle[i].get_gauge_colour(j));
             }
         }
-        // if (battle[i].get_unit_id() && battle[i].get_allied())
-        //     DrawRectangle(battle[i].get_bounds().x + x_offset, \
-        //         battle[i].get_bounds().y, battle[i].get_bounds().width, \
-        //         battle[i].get_bounds().height, BLUE);
-        // else if (battle[i].get_unit_id())
-        //     DrawRectangle(battle[i].get_bounds().x + x_offset, \
-        //         battle[i].get_bounds().y, battle[i].get_bounds().width, \
-        //         battle[i].get_bounds().height, RED); 
         if (battle[i].get_unit_id())
         {
             auto    search = sprites->find(battle[i].get_unique_id());

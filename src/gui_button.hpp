@@ -8,5 +8,6 @@ game_state  check_button_destination(gui_base *gui);
 void        set_button(gui_base *gui, bool pressed);
 game_state  check_buttons(std::multimap <gui_type, gui_base *> *gui, \
     game_state current_state);
+gui_button  *generate_button(int i, mINI::INIFile file);
 
 #endif

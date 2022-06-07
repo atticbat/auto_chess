@@ -60,10 +60,14 @@ public:
     {
         UnloadTexture(image);
     }
-    Vector2     get_offset_location(Vector2 mouse_point)
+    Vector2 get_offset_location(Vector2 mouse_point)
     {
-        return (Vector2 { mouse_point.x - width / 2, mouse_point.y - \
-            image.height * 9 / 10 });
+        return ((Vector2) { width / 2, source.height * 9 / 10});
+    }
+    Rectangle   get_boundaries(Vector2 mouse_point)
+    {
+        return (Rectangle { mouse_point.x, mouse_point.y, width * 1 / 2, \
+            source.height * 1 / 2 });
     }
 };
 
