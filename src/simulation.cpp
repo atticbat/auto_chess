@@ -5,14 +5,33 @@
 unit_stats  battle[56];
 int         move_order[56];
 
-void    initialise_simulation(std::multimap <gui_type, gui_base *> *gui, \
-    std::map <int, sprite_multi *> *sprites, default_run *user, \
-    float sprite_size, char **unit_db)
+void    reroll_shop_user(default_run *user);
+
+void    initialise_sim_gui(std::multimap <gui_type, gui_base *> *gui)
+{
+    mINI::INIFile file ("data/simulation_gui.ini");
+
+    for (int i = 0; i < 2; i++)
+        gui->insert(std::pair<gui_type, gui_button *> (G_BUTTON, \
+            generate_button(i, file)));
+}
+
+void    initialise_simulation(std::map <int, sprite_multi *> *sprites, \
+    default_run *user, float sprite_size, char **unit_db)
 {
     std::random_device rnd;
     std::mt19937 g(rnd());
     mINI::INIFile file ("data/simulation_gui.ini");
 
+    for (std::map <int, sprite_multi *>::iterator i = \
+        sprites->begin(); i != sprites->end(); )
+    {
+        delete(i->second);
+        i = sprites->erase(i);
+        i++; 
+    }
+    for (int i = 0; i < 56; i++)
+        battle[i].re_init();
     for (int i = 0; i < 8; i++)
     {
         if (user->get_roster_slot(i))
@@ -144,8 +163,24 @@ static int  find_unit_by_unique_id(int unique_id)
     return (-1);
 }
 
+static void despawn_gui(std::multimap <gui_type, gui_base *> *gui, int index)
+{
+    for (std::multimap <gui_type, gui_base *>::iterator i = \
+        gui->begin(); i != gui->end(); )
+    {
+        if (index == i->second->get_id())
+        {
+            delete(i->second);
+            i = gui->erase(i);
+        }
+        else
+            i++;
+    }
+}
+
 game_state  simulation(std::multimap <particle_type, particle *> *particles, \
-    std::map <int, sprite_multi *> *sprites, game_settings *settings)
+    std::map <int, sprite_multi *> *sprites, game_settings *settings, \
+    default_run *user, std::multimap <gui_type, gui_base *> *gui)
 {
     settings->x_offset += scroll_controls(settings->x_offset, \
         settings->sprite_size, settings->screen_dim.x);
@@ -176,10 +211,48 @@ game_state  simulation(std::multimap <particle_type, particle *> *particles, \
         for (auto i = sprites->begin(); i != sprites->end(); ++i)
             i->second->increment_state();
     }
+    int ally_count = 0;
+    int enemy_count = 0;
     for (int i = 0; i < 56; i++)
     {
         battle[i].adjust_sprite();
         battle[i].set_gauge_bounds(settings->sprite_size);
+        if (battle[i].get_allied() && battle[i].get_unit_id())
+            ally_count++;
+        else if (!(battle[i].get_allied()) && battle[i].get_unit_id())
+            enemy_count++;
+    }
+    if (ally_count == 0 && user->get_ongoing_game())
+    {
+        despawn_gui(gui, 1);
+        user->toggle_ongoing_game();
+        user->add_gold(5);
+        user->add_exp(4);
+        user->add_loss();
+        gui_base    *label = new gui_base;
+        mINI::INIFile       file ("data/simulation_gui.ini");
+        label->set_text(0, 0, 128, file);
+        label->set_id(1);
+        gui->insert(std::pair <gui_type, gui_base *> (G_HITBOX, label));
+        set_boundaries(gui, 0, 0, file, settings->scale);
+        reroll_shop_user(user);
+        write_changes(user);
+    }
+    else if (enemy_count == 0 && user->get_ongoing_game())
+    {
+        despawn_gui(gui, 1);
+        user->toggle_ongoing_game();
+        user->add_gold(5);
+        user->add_exp(4);
+        user->add_win();
+        gui_base    *label = new gui_base;
+        mINI::INIFile       file ("data/simulation_gui.ini");
+        label->set_text(1, 0, 128, file);
+        label->set_id(1);
+        gui->insert(std::pair <gui_type, gui_base *> (G_HITBOX, label));
+        set_boundaries(gui, 0, 0, file, settings->scale);
+        reroll_shop_user(user);
+        write_changes(user);
     }
     for (std::multimap <particle_type, particle *>::iterator i = \
         particles->begin(); i != particles->end(); ++i)

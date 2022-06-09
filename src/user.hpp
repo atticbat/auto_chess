@@ -18,6 +18,7 @@ private:
     int     wins = 0;
     int     losses = 0;
     int     sprite_size = 1;
+    bool    ongoing_game = false;
 public:
     int     get_gold(void) { return (gold); }
     int     get_level(void) { return (level); }
@@ -30,6 +31,7 @@ public:
     int     get_wins(void) { return (wins); }
     int     get_losses(void) { return (losses); }
     int     get_sprite_size(void) { return (sprite_size); }
+    bool    get_ongoing_game(void) { return (ongoing_game); }
     void    set_gold(int amount) { gold = amount; }
     void    add_gold(int amount) { gold += amount; }
     void    deduct_gold(int amount) { gold -= amount; }
@@ -62,7 +64,6 @@ public:
             else if (roster[slot] >= 41 && roster[slot] <= 70)
                 roster[slot] += 10;
         }
-
     }
     void    set_store (int slot, int id) { store[slot] = id; }
     void    set_wins(int amount) { wins = amount; }
@@ -70,6 +71,7 @@ public:
     void    set_losses(int amount) { losses = amount; }
     void    add_loss(void) { losses++; }
     void    set_sprite_size(int option) { sprite_size = option; }
+    void    toggle_ongoing_game(void) { ongoing_game = !ongoing_game; }
 };
 
 void    write_changes(default_run *user);

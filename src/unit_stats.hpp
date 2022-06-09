@@ -22,7 +22,6 @@ private:
     bool        perform_attack = false;
     bool        projectile_mid_flight = false;
     float       defense = 0;
-    // int         range = 0;
     int         max_range = 1;
     int         dead_zone = 0;
     int         ability_power = 0;
@@ -38,7 +37,19 @@ private:
     bool        is_moving = false;
     bool        is_dead = false;
 public:
-    void initialise_unit (int id, char **unit_db, bool ally, int pos, float scale)
+    void    re_init(void)
+    {
+        unique_id = 0;
+        unit_id = 0;
+        perform_attack = false;
+        projectile_mid_flight = false;
+        cast_spell = false;
+        allied = true;
+        to_move = 0;
+        is_moving = false;
+        is_dead = false;
+    }
+    void    initialise_unit (int id, char **unit_db, bool ally, int pos, float scale)
     {
 
         static int  _unique_id = 1;

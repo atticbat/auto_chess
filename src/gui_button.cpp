@@ -14,6 +14,7 @@ gui_button  *generate_button(int i, mINI::INIFile file)
 
     button->set_text(i, 3, 24, file);
     button->set_destination(parse_destination(i, file));
+    button->set_id(i);
     return (button);
 }
 
@@ -38,4 +39,18 @@ game_state  check_buttons(std::multimap <gui_type, gui_base *> *gui, \
             return (button->get_destination());
     }
     return (current_state);
+}
+
+void    change_button_destination(int new_destination, int id, \
+    mINI::INIFile file)
+{
+    mINI::INIStructure ini;
+    char    buffer[5];
+    char    buffer2[5];
+
+    ft_itoa(new_destination, buffer);
+    ft_itoa(id, buffer2);
+    file.read(ini);
+    ini["ButtonDestination"][buffer2] = buffer;
+    file.write(ini);
 }

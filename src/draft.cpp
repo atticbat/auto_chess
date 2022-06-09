@@ -89,3 +89,12 @@ void    reroll_shop(std::multimap <gui_type, gui_base *> *gui, default_run \
         }
     }
 }
+
+void    reroll_shop_user(default_run *user)
+{
+   int              available_units[5] = { 1, 3, 4, 5, 42 };
+
+    for (int i = 0; i < 5; i++)
+        user->set_store(i, available_units[rand() % 5]);
+}
+

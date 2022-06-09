@@ -2,47 +2,14 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-// void    overwrite_user(default_run *user)
-// {
-//     mINI::INIFile   file ("data/user_settings.ini");
-//     mINI::INIStructure ini;
-//     char    holder[5];
-//     file.read(ini);
-//     for (int i = 0; i < 8; i++)
-//     {
-//         ft_itoa(i, holder);
-//         ini["Roster"][holder] = "0";
-//     }
-//     ini["UserSettings"]["name"] = user->get_name();
-//     ft_itoa(user->get_gold(), holder);
-//     ini["UserSettings"]["gold"] = holder;
-//     ft_itoa(user->get_level(), holder);
-//     ini["UserSettings"]["level"] = holder;
-//     ini["UserSettings"]["exp"] = "0";
-//     ini["UserSettings"]["wins"] = "0";
-//     ini["UserSettings"]["losses"] = "0";
-//     file.write(ini);
-// }
-
-static void change_settings_return(int new_destination)
-{
-    mINI::INIFile file ("data/settings_gui.ini");
-    mINI::INIStructure ini;
-    char    buffer[5];
-
-    ft_itoa(new_destination, buffer);
-    file.read(ini);
-    ini["ButtonDestination"]["0"] = buffer;
-    file.write(ini);
-}
-
 static void enter_menu(std::multimap <gui_type, gui_base *> *gui)
 {
     mINI::INIFile file("data/menu_gui.ini");
+    mINI::INIFile file2("data/settings_gui.ini");
 
     initialise_menu(gui);
     set_boundaries(gui, 0, 0, file, 1);
-    change_settings_return(1);
+    change_button_destination(1, 0, file2);
 }
 
 static void enter_settings(std::multimap <gui_type, gui_base *> *gui, \
@@ -69,6 +36,7 @@ static void enter_new_game(std::multimap <gui_type, gui_base *> *gui, \
     default_run **user, float scale)
 {
     mINI::INIFile file("data/draft_gui.ini");
+    mINI::INIFile file2("data/settings_gui.ini");
 
     delete (*user);
     *user = new default_run();
@@ -76,30 +44,41 @@ static void enter_new_game(std::multimap <gui_type, gui_base *> *gui, \
     initialise_draft(gui, *user);
     reroll_shop(gui, *user);
     set_boundaries(gui, 0, 0, file, scale);
-    change_settings_return(7);
+    change_button_destination(7, 0, file2);
 }
 
 static void enter_load(std::multimap <gui_type, gui_base *> *gui, \
     default_run **user, float scale)
 {
     mINI::INIFile file("data/draft_gui.ini");
+    mINI::INIFile file2("data/settings_gui.ini");
 
     load_user(*user);
     initialise_draft(gui, *user);
     set_boundaries(gui, 0, 0, file, scale);
-    change_settings_return(7);
+    change_button_destination(7, 0, file2);
 }
 
-static char **enter_simulation(std::multimap <gui_type, gui_base *> *gui, \
-    std::map <int, sprite_multi *> *sprites, float sprite_size, \
+static void enter_simulation(std::multimap <gui_type, gui_base *> *gui, \
+    std::map <int, sprite_multi *> *sprites, game_settings settings, \
     default_run *user)
 {
     char    **unit_db;
-    // mINI::INIFile file("data/simulation_gui.ini");
+    mINI::INIFile file("data/simulation_gui.ini");
+    mINI::INIFile file2("data/settings_gui.ini");
 
     unit_db = initialise_unit_db();
-    initialise_simulation(gui, sprites, user, sprite_size, unit_db);
-    return (unit_db);
+    if (!(user->get_ongoing_game()))
+    {
+        initialise_simulation(sprites, user, settings.sprite_size, unit_db);
+        user->toggle_ongoing_game();
+    }
+    initialise_sim_gui(gui);
+    set_boundaries(gui, 0, 0, file, settings.scale);
+    for (int i = 0; i < 128; i++)
+        free (unit_db[i]);
+    free (unit_db);
+    change_button_destination(4, 0, file2);
 }
 
 static void initialise_game(game_settings *settings)
@@ -131,6 +110,7 @@ int main(void)
     std::multimap <gui_type, gui_base *> gui;
     std::multimap <particle_type, particle *> particles;
     std::map <int, sprite_multi *> sprites;
+
     while (!settings.exit_window)
     {
         if (WindowShouldClose())
@@ -169,6 +149,8 @@ int main(void)
                     enter_menu(&gui);
                 if (settings.state == DRAFT)
                     enter_load(&gui, &user, settings.scale);
+                if (settings.state == SIMULATION)
+                    enter_simulation(&gui, &sprites, settings, user);
             } break;
             case LOAD:
             {
@@ -189,12 +171,18 @@ int main(void)
                 if (settings.state == SETTINGS)
                     enter_settings(&gui, settings);
                 if (settings.state == SIMULATION)
-                    unit_db = enter_simulation(&gui, &sprites, \
-                        settings.sprite_size, user);
+                    enter_simulation(&gui, &sprites, settings, user);
             } break;
             case SIMULATION:
             {
-                simulation(&particles, &sprites, &settings);
+                settings.state = check_gui(&gui, settings, user);
+                simulation(&particles, &sprites, &settings, user, &gui);
+                if (settings.state != SIMULATION && (int)settings.state < 8)
+                    del_gui(&gui);
+                if (settings.state == DRAFT)
+                    enter_load(&gui, &user, settings.scale);
+                if (settings.state == SETTINGS)
+                    enter_settings(&gui, settings);
             } break;
             case DATABASE:
             {
@@ -211,7 +199,6 @@ int main(void)
             case APPLY:
             {
                 apply_settings(&gui, &settings, user);
-                printf("sprite size is %d right now.\n", user->get_sprite_size());
                 switch (user->get_sprite_size())
                 {
                     case 0:
@@ -275,7 +262,7 @@ int main(void)
             case EXIT:
             {
                 settings.exit_window = true;
-            }
+            } break ;
             default: break;
         }
         BeginDrawing();
@@ -315,6 +302,9 @@ int main(void)
                 {
                     ClearBackground(RAYWHITE);
                     draw_simulation(&particles, &sprites, settings);
+                    if (!(user->get_ongoing_game()))
+                        DrawRectangle(0, 0, settings.screen_dim.x, \
+                            settings.screen_dim.y, Color { 0, 0, 0, 125 });
                     draw_gui(&gui, settings);
                 } break;
                 case EDIT_UNIT:
