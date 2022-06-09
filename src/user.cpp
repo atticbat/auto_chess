@@ -52,6 +52,8 @@ void    load_user(default_run *user)
     user->set_exp_cap(stoi(ini.get("UserSettings").get("max_exp")));
     user->set_wins(stoi(ini.get("UserSettings").get("wins")));
     user->set_losses(stoi(ini.get("UserSettings").get("losses")));
+    user->set_sprite_size(stoi(ini.get("UserSettings").get("ssize")));
+    printf("sprite size is %d.\n", user->get_sprite_size());
     for (int i = 0; i < 8; i++)
     {
         ft_itoa(i, it);

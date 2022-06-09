@@ -6,7 +6,8 @@ unit_stats  battle[56];
 int         move_order[56];
 
 void    initialise_simulation(std::multimap <gui_type, gui_base *> *gui, \
-    std::map <int, sprite_multi *> *sprites, default_run *user, char **unit_db)
+    std::map <int, sprite_multi *> *sprites, default_run *user, \
+    float sprite_size, char **unit_db)
 {
     std::random_device rnd;
     std::mt19937 g(rnd());
@@ -17,7 +18,7 @@ void    initialise_simulation(std::multimap <gui_type, gui_base *> *gui, \
         if (user->get_roster_slot(i))
         {
             battle[16 + i].initialise_unit(user->get_roster_slot(i), unit_db, \
-                true, i);
+                true, i, sprite_size);
             sprite_multi    *sprite = new sprite_multi(\
                 battle[16 + i].get_unit_id(), 9, 1, file);
 
@@ -30,9 +31,9 @@ void    initialise_simulation(std::multimap <gui_type, gui_base *> *gui, \
         if (user->get_roster_slot(i))
         {
             battle[40 - i].initialise_unit(user->get_roster_slot(i), unit_db, \
-                false, i);
+                false, i, sprite_size);
             sprite_multi    *sprite = new sprite_multi(\
-                battle[40 - i].get_unit_id(), 9, 5, file);
+                battle[40 - i].get_unit_id(), 9, 2, file);
 
             sprites->insert(std::pair <int, sprite_multi *> \
                 (battle[40 - i].get_unique_id(), sprite));
@@ -43,25 +44,27 @@ void    initialise_simulation(std::multimap <gui_type, gui_base *> *gui, \
     std::shuffle(&move_order[0], &move_order[55], g);
 }
 
-static int  scroll_controls(int x_offset)
+static int  scroll_controls(int x_offset, float sprite_size, int screen_dim)
 {
     if (IsKeyPressed(KEY_LEFT) && x_offset < 0)
-        return (24);
+        return (48 * sprite_size);
     else if (IsKeyDown(KEY_LEFT) && x_offset < 0)
-        return (12);
-    if (IsKeyPressed(KEY_RIGHT) && x_offset > -5248)
-        return (-24);
-    else if (IsKeyDown(KEY_RIGHT) && x_offset > -5248)
-        return (-12);
+        return (24 * sprite_size);
+    if (IsKeyPressed(KEY_RIGHT) && x_offset > -(56 * (256 * sprite_size) - \
+        screen_dim))
+        return (-48 * sprite_size);
+    else if (IsKeyDown(KEY_RIGHT) && x_offset > -(56 * (256 * sprite_size) - \
+        screen_dim))
+        return (-24 * sprite_size);
     return (0);
 }
 
-static void unit_movement(int i, sprite_multi *sprite)
+static void unit_movement(int i, sprite_multi *sprite, float sprite_size)
 {
     if (!(battle[i].get_is_moving()) && battle[i].get_unit_id() \
         && battle[i + battle[i].get_direction()].get_unit_id() == 0)
     {
-        battle[i].set_to_move(128);
+        battle[i].set_to_move(256 * sprite_size);
         battle[i].set_is_moving(true);
         std::swap(battle[i], battle[i + \
             battle[i].get_direction()]);
@@ -142,10 +145,11 @@ static int  find_unit_by_unique_id(int unique_id)
 }
 
 game_state  simulation(std::multimap <particle_type, particle *> *particles, \
-    std::map <int, sprite_multi *> *sprites, int *x_offset, int frame_count)
+    std::map <int, sprite_multi *> *sprites, game_settings *settings)
 {
-    *x_offset += scroll_controls(*x_offset);
-    if (frame_count % 8 == 0)
+    settings->x_offset += scroll_controls(settings->x_offset, \
+        settings->sprite_size, settings->screen_dim.x);
+    if (settings->frame_count % 8 == 0)
     {
         for (int i = 0; i < 56; i++)
         {
@@ -155,11 +159,13 @@ game_state  simulation(std::multimap <particle_type, particle *> *particles, \
             auto    search = sprites->find(battle[j].get_unique_id());
             if (search != sprites->end())
             {
-                unit_movement(j, search->second);
+                unit_movement(j, search->second, settings->sprite_size);
                 battle[j].increase_atk_gauge();
-                unit_melee_attack(particles, j, *x_offset, search->second);
+                unit_melee_attack(particles, j, settings->x_offset, \
+                    search->second);
                 if (!(battle[j].get_projectile_mid_flight()))
-                    unit_ranged_attack(particles, j, *x_offset, search->second);
+                    unit_ranged_attack(particles, j, settings->x_offset, \
+                        search->second);
                 if (battle[j].get_is_dead())
                 {
                     battle[j].destroy_unit();
@@ -173,7 +179,7 @@ game_state  simulation(std::multimap <particle_type, particle *> *particles, \
     for (int i = 0; i < 56; i++)
     {
         battle[i].adjust_sprite();
-        battle[i].set_gauge_bounds();
+        battle[i].set_gauge_bounds(settings->sprite_size);
     }
     for (std::multimap <particle_type, particle *>::iterator i = \
         particles->begin(); i != particles->end(); ++i)
@@ -188,7 +194,7 @@ game_state  simulation(std::multimap <particle_type, particle *> *particles, \
                 if (label)
                 {
                     label->decrement();
-                    label->update_bounds(*x_offset);
+                    label->update_bounds(settings->x_offset);
                 }
             } break ;
             case P_PROJECTILE:
@@ -208,11 +214,11 @@ game_state  simulation(std::multimap <particle_type, particle *> *particles, \
                         if (atk_index > 0 && tgt_index > 0)
                         {
                             perform_attack(particles, atk_index, \
-                                tgt_index, *x_offset);
+                                tgt_index, settings->x_offset);
                             battle[atk_index].set_projectile_mid_flight(false);
                         }
                     }
-                    projectile->update_bounds(*x_offset);
+                    projectile->update_bounds(settings->x_offset);
                 }
             } break ;
             default : break ;
@@ -245,7 +251,7 @@ static void despawn_particles(std::multimap <particle_type, particle *> *particl
 }
 
 void    draw_simulation(std::multimap <particle_type, particle *> *particles, \
-    std::map <int, sprite_multi *> *sprites, int x_offset)
+    std::map <int, sprite_multi *> *sprites, game_settings settings)
 {
     for (int i = 0; i < 56; i++)
     {
@@ -253,8 +259,8 @@ void    draw_simulation(std::multimap <particle_type, particle *> *particles, \
         {
             for (int j = 0; j < 3; j++)
             {
-                DrawRectangle(battle[i].get_gauge_bounds(j).x + x_offset, \
-                    battle[i].get_gauge_bounds(j).y, \
+                DrawRectangle(battle[i].get_gauge_bounds(j).x + \
+                    settings.x_offset, battle[i].get_gauge_bounds(j).y, \
                     battle[i].get_gauge_bounds(j).width, \
                     battle[i].get_gauge_bounds(j).height, \
                     battle[i].get_gauge_colour(j));
@@ -265,12 +271,15 @@ void    draw_simulation(std::multimap <particle_type, particle *> *particles, \
             auto    search = sprites->find(battle[i].get_unique_id());
 
             if (search != sprites->end())
-                DrawTextureRec(search->second->get_image(), search->second->get_source(), \
-                    (Vector2) { battle[i].get_bounds().x + x_offset - 96, battle[i].get_bounds().y }, WHITE);
+                DrawTexturePro(search->second->get_image(), search->second->get_source(), \
+                    search->second->get_boundaries(battle[i].get_bounds(), \
+                    settings.sprite_size, settings.x_offset), search->second->get_offset_location(\
+                    battle[i].get_bounds(), settings.sprite_size), 0, RAYWHITE);
         }
-        DrawText(TextFormat("%i", move_order[i]), 128 * i + x_offset + 4, \
-            404, 24, BLACK);
-        DrawRectangleLines(128 * i + x_offset, 400, 128, 256, BLACK);
+        DrawText(TextFormat("%i", move_order[i]), 256 * settings.sprite_size * i + \
+            settings.x_offset + 4, 404, 24, BLACK);
+        DrawRectangleLines(256 * settings.sprite_size * i + settings.x_offset, 400, \
+            256 * settings.sprite_size, 512 * settings.sprite_size, BLACK);
     }
     for (std::multimap <particle_type, particle *>::iterator i = \
         particles->begin(); i != particles->end(); ++i)

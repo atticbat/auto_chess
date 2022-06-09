@@ -46,13 +46,13 @@ static void enter_menu(std::multimap <gui_type, gui_base *> *gui)
 }
 
 static void enter_settings(std::multimap <gui_type, gui_base *> *gui, \
-    Vector2 screen_dim, Vector2 settings_dim)
+    game_settings settings)
 {
     mINI::INIFile file("data/settings_gui.ini");
 
     initialise_settings(gui);
-    set_boundaries(gui, (screen_dim.x - settings_dim.x) / 2, \
-        (screen_dim.y - settings_dim.y) / 2, file, 1);
+    set_boundaries(gui, (settings.screen_dim.x - settings.settings_dim.x) \
+        / 2, (settings.screen_dim.y - settings.settings_dim.y) / 2, file, 1);
 }
 
 static char **enter_database(std::multimap <gui_type, gui_base *> *gui, \
@@ -91,124 +91,155 @@ static void enter_load(std::multimap <gui_type, gui_base *> *gui, \
 }
 
 static char **enter_simulation(std::multimap <gui_type, gui_base *> *gui, \
-    std::map <int, sprite_multi *> *sprites, default_run *user)
+    std::map <int, sprite_multi *> *sprites, float sprite_size, \
+    default_run *user)
 {
     char    **unit_db;
     // mINI::INIFile file("data/simulation_gui.ini");
 
     unit_db = initialise_unit_db();
-    initialise_simulation(gui, sprites, user, unit_db);
+    initialise_simulation(gui, sprites, user, sprite_size, unit_db);
     return (unit_db);
+}
+
+static void initialise_game(game_settings *settings)
+{
+    InitWindow(0, 0, "Auto Chess");
+    settings->max_dim = { (float) GetScreenWidth(), (float) \
+        GetScreenHeight() };
+    settings->screen_dim = get_screen_dim();
+    settings->scale = settings->screen_dim.x / settings->max_dim.x;
+    SetWindowSize(settings->screen_dim.x, settings->screen_dim.y);
+    SetTargetFPS(60);
+
+    settings->mouse_point = { 0.0f, 0.0f };
+    settings->settings_dim = { 800, 450 };
+    settings->exit_window = false;
+    settings->frame_count = 0;
+    settings->sprite_size = get_sprite_size();
+    settings->x_offset = -(56 * (256 * settings->sprite_size) - \
+        settings->screen_dim.x) / 2;
+    settings->state = LOADING;
 }
 
 int main(void)
 {
-    InitWindow(0, 0, "Auto Chess");
-    const Vector2   max_dim = { (float) GetScreenWidth(), (float) \
-        GetScreenHeight() };
-    Vector2         screen_dim = get_screen_dim();
-    float           scale = screen_dim.x / max_dim.x;
-    SetWindowSize(screen_dim.x, screen_dim.y);
-    SetTargetFPS(60);
-
-    Vector2         mouse_point = { 0.0f, 0.0f };
-    const Vector2   settings_dim = { 800, 450 };
+    game_settings   settings;
+    initialise_game(&settings);
     char            **unit_db = NULL;
-    bool            exit_window = false;
-    int             frame_count = 0;
     default_run     *user = new default_run();
     std::multimap <gui_type, gui_base *> gui;
     std::multimap <particle_type, particle *> particles;
     std::map <int, sprite_multi *> sprites;
-    int             x_offset = -2000;
-    game_state      state = LOADING;
-    while (!exit_window)
+    while (!settings.exit_window)
     {
         if (WindowShouldClose())
-            exit_window = true;
-        mouse_point = GetMousePosition();
-        frame_count++;
-        switch(state)
+            settings.exit_window = true;
+        settings.mouse_point = GetMousePosition();
+        settings.frame_count++;
+        switch(settings.state)
         {
             case LOADING:
             {
-                if (frame_count > 60)
+                if (settings.frame_count > 60)
                 {
-                    state = MENU;
+                    settings.state = MENU;
                     enter_menu(&gui);
                 }
             } break;
             case MENU:
             {
-                state = check_gui(&gui, mouse_point, state, user);
-                if (state != MENU)
+                settings.state = check_gui(&gui, settings, user);
+                if (settings.state != MENU)
                     del_gui(&gui);
-                if (state == SETTINGS)
-                    enter_settings(&gui, screen_dim, settings_dim);
-                else if (state == DATABASE)
-                    unit_db = enter_database(&gui, screen_dim);
-                else if (state == DRAFT)
-                    enter_new_game(&gui, &user, scale);
+                if (settings.state == SETTINGS)
+                    enter_settings(&gui, settings);
+                else if (settings.state == DATABASE)
+                    unit_db = enter_database(&gui, settings.screen_dim);
+                else if (settings.state == DRAFT)
+                    enter_new_game(&gui, &user, settings.scale);
             } break;
             case SETTINGS:
             {
-                state = check_gui(&gui, mouse_point, state, user);
-                scale = screen_dim.x / max_dim.x;
-                if (state != SETTINGS && (int)state < 8)
+                settings.state = check_gui(&gui, settings, user);
+                settings.scale = settings.screen_dim.x / settings.max_dim.x;
+                if (settings.state != SETTINGS && (int)settings.state < 8)
                     del_gui(&gui);
-                if (state == MENU)
+                if (settings.state == MENU)
                     enter_menu(&gui);
-                if (state == DRAFT)
-                    enter_load(&gui, &user, scale);
+                if (settings.state == DRAFT)
+                    enter_load(&gui, &user, settings.scale);
             } break;
             case LOAD:
             {
-                enter_load(&gui, &user, scale);
-                state = DRAFT;
+                enter_load(&gui, &user, settings.scale);
+                settings.state = DRAFT;
             } break ;
             case DRAFT:
             {
                 write_changes(user);
-                state = check_gui(&gui, mouse_point, state, user);
-                if (state != DRAFT && (int)state < 8)
+                settings.state = check_gui(&gui, settings, user);
+                if (settings.state != DRAFT && (int)settings.state < 8)
                 {
                     del_sprites(&gui);
                     del_gui(&gui);
                 }
-                if (state == MENU)
+                if (settings.state == MENU)
                     enter_menu(&gui);
-                if (state == SETTINGS)
-                    enter_settings(&gui, screen_dim, settings_dim);
-                if (state == SIMULATION)
-                    unit_db = enter_simulation(&gui, &sprites, user);
+                if (settings.state == SETTINGS)
+                    enter_settings(&gui, settings);
+                if (settings.state == SIMULATION)
+                    unit_db = enter_simulation(&gui, &sprites, \
+                        settings.sprite_size, user);
             } break;
             case SIMULATION:
             {
-                simulation(&particles, &sprites, &x_offset, frame_count);
+                simulation(&particles, &sprites, &settings);
             } break;
             case DATABASE:
             {
-                state = check_gui(&gui, mouse_point, state, user);
-                if (state != DATABASE && (int)state < 8)
+                settings.state = check_gui(&gui, settings, user);
+                if (settings.state != DATABASE && (int)settings.state < 8)
                 {
                     del_db(unit_db);
                     unit_db = NULL;
                     del_gui(&gui);
                 }
-                if (state == MENU)
+                if (settings.state == MENU)
                     enter_menu(&gui);
             } break;
             case APPLY:
             {
-                apply_settings(&gui, &screen_dim, max_dim, settings_dim);
-                state = SETTINGS;
+                apply_settings(&gui, &settings, user);
+                printf("sprite size is %d right now.\n", user->get_sprite_size());
+                switch (user->get_sprite_size())
+                {
+                    case 0:
+                    {
+                        settings.sprite_size = 1;
+                    } break ;
+                    case 1:
+                    {
+                        settings.sprite_size = 0.75;
+                    } break ;
+                    case 2:
+                    {
+                        settings.sprite_size = 0.5;
+                    } break;
+                    case 3:
+                    {
+                        settings.sprite_size = 0.25;
+                    } break ;
+                    default: break ;
+                }
+                settings.state = SETTINGS;
             } break ;
             case EDIT_UNIT:
             {
                 edit_unit(&gui, unit_db);
                 del_db(unit_db);
                 unit_db = initialise_unit_db();
-                state = DATABASE;
+                settings.state = DATABASE;
             } break ;
             case REROLL:
             {
@@ -217,7 +248,7 @@ int main(void)
                     reroll_shop(&gui, user);
                     user->deduct_gold(1);
                 }
-                state = DRAFT;
+                settings.state = DRAFT;
             } break ;
             case BUY_XP:
             {
@@ -239,16 +270,16 @@ int main(void)
                     if (label)
                         label->update_text(user->get_level(), false);
                 }
-                state = DRAFT;
+                settings.state = DRAFT;
             } break ;
             case EXIT:
             {
-                exit_window = true;
+                settings.exit_window = true;
             }
             default: break;
         }
         BeginDrawing();
-            switch (state)
+            switch (settings.state)
             {
                 case LOADING:
                 {
@@ -259,39 +290,41 @@ int main(void)
                 case MENU:
                 {
                     ClearBackground(BLUE);
-                    draw_gui(&gui, screen_dim, settings_dim, mouse_point);
+                    draw_gui(&gui, settings);
                 } break;
                 case APPLY:
                 case SETTINGS:
                 {
                     ClearBackground(DARKBROWN);
-                    DrawRectangle((screen_dim.x - settings_dim.x)/2, \
-                        (screen_dim.y - settings_dim.y)/2, settings_dim.x, \
-                        settings_dim.y, RAYWHITE);
-                    draw_gui(&gui, screen_dim, settings_dim, mouse_point);
+                    DrawRectangle((settings.screen_dim.x - \
+                        settings.settings_dim.x)/2, (settings.screen_dim.y \
+                        - settings.settings_dim.y)/2, settings.settings_dim.x,\
+                        settings.settings_dim.y, RAYWHITE);
+                    draw_gui(&gui, settings);
                 } break;
                 case REROLL:
                 case DRAFT:
                 {
                     ClearBackground(RAYWHITE);
-                    DrawRectangle(0, screen_dim.y * 0.75, screen_dim.x, \
-                        screen_dim.y * 0.25, BROWN);
-                    draw_gui(&gui, screen_dim, settings_dim, mouse_point);
+                    DrawRectangle(0, settings.screen_dim.y * 0.75, \
+                        settings.screen_dim.x, settings.screen_dim.y * 0.25, \
+                        BROWN);
+                    draw_gui(&gui, settings);
                 } break;
                 case SIMULATION:
                 {
                     ClearBackground(RAYWHITE);
-                    draw_simulation(&particles, &sprites, x_offset);
-                    draw_gui(&gui, screen_dim, settings_dim, mouse_point);
+                    draw_simulation(&particles, &sprites, settings);
+                    draw_gui(&gui, settings);
                 } break;
                 case EDIT_UNIT:
                 case DATABASE:
                 {
                     ClearBackground(RAYWHITE);
-                    DrawRectangle(0, 0, screen_dim.x, 64 * (((\
-                    DATABASE_INPUTS) * 160) / (screen_dim.x - 160)) \
+                    DrawRectangle(0, 0, settings.screen_dim.x, 64 * (((\
+                    DATABASE_INPUTS) * 160) / (settings.screen_dim.x - 160)) \
                         + 96, LIME);
-                    draw_gui(&gui, screen_dim, settings_dim, mouse_point);
+                    draw_gui(&gui, settings);
                     draw_grid(check_scrollbar_x(find_gui_by_id(&gui, 15, \
                         G_SCROLLBAR)), check_scrollbar_y(find_gui_by_id(&gui, \
                         15, G_SCROLLBAR)), unit_db);

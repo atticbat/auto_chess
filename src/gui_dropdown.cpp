@@ -79,5 +79,6 @@ void    draw_dropdowns(gui_base *gui)
 
     GuiDropdownBox(dropdown->get_bounds(), dropdown->get_text(),\
         &(dropdown->choice), dropdown->get_edit_mode());
-    dropdown->set_default(resolution_x, (resolution_x / 16) * 9);
+    if (dropdown->get_is_resolution())
+        dropdown->set_default(resolution_x, (resolution_x / 16) * 9);
 }

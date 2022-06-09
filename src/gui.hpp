@@ -9,6 +9,20 @@ typedef enum gui_type {G_LABEL = 0, G_DYNAMIC_LABEL, G_CHECKBOX, G_BUTTON, \
     G_SLIDER, G_SCROLLBAR, G_DROPDOWN, G_TEXTBOX, G_DRAG_DROP, \
     G_PROGRESS_BAR, G_HITBOX} gui_type;
 
+typedef struct  s_game_settings
+{
+    Vector2     max_dim;
+    Vector2     screen_dim;
+    float       scale;
+    Vector2     mouse_point;
+    Vector2     settings_dim;
+    bool        exit_window;
+    int         frame_count;
+    float       sprite_size;
+    int         x_offset;
+    game_state  state;
+}               game_settings;
+
 class gui_base
 {
 protected:
@@ -142,6 +156,7 @@ class gui_dropdown : public gui_base
 {
 private:
     bool    edit_mode = false;
+    bool    is_resolution = false;
     int     default_x = 0;
     int     default_y = 0;
 public:
@@ -154,7 +169,9 @@ public:
         default_y = height;
     }
     bool    get_edit_mode(void) { return (edit_mode); }
+    bool    get_is_resolution(void) { return (is_resolution); }
     void    toggle_edit_mode(void) { edit_mode = !edit_mode; }
+    void    set_is_resolution(bool is_res) { is_resolution = is_res; }
 };
 
 class gui_slider : public gui_base
@@ -277,12 +294,12 @@ public:
     void        generate_picked_up_sprite (int id, int frames, mINI::INIFile \
         file)
     {
-        sprite = new sprite_picked_up(unit_id, frames, 1, file);
+        sprite = new sprite_picked_up(unit_id, frames, 0, file);
         unit_id = 0;
     }
     void        generate_static_sprite (int id, int frames, mINI::INIFile file)
     {
-        sprite = new sprite_base(id, frames, 2, file);
+        sprite = new sprite_base(id, frames, 1, file);
     }
     void        remove_sprite(void)
     {
@@ -292,22 +309,21 @@ public:
             sprite = NULL;
         }
     }
-    void        draw_sprite(Vector2 point)
+    void        draw_sprite(Vector2 point, float scale, bool drag)
     {
-        sprite_picked_up    *picked_up = static_cast <sprite_picked_up *> (sprite);
+        if (drag)
+        {
+            sprite_picked_up    *picked_up = static_cast <sprite_picked_up *> (sprite);
 
-        DrawTexturePro(picked_up->get_image(), picked_up->get_source(), \
-            picked_up->get_boundaries(point), \
-            picked_up->get_offset_location(point), 0, RAYWHITE);
-        // DrawTextureEx(picked_up->get_image(), picked_up->get_offset_location(point), 0, 0.5, RAYWHITE);
-        // if (picked_up && point.x != 0 && point.y != 0)
-        //     DrawTextureRec(picked_up->get_image(), picked_up->get_source(), \
-        //         picked_up->get_offset_location(point), WHITE);
-        // else
-        //     DrawTextureRec(sprite->get_image(), sprite->get_source(), \
-        //         Vector2 {bounds.x + (bounds.width - sprite->get_width()) / 2, \
-        //         bounds.y - sprite->get_image().height * 3/4}, WHITE);
-        //         //change inbound: move bottom of sprite y to middle of gui y
+            if (picked_up)
+                DrawTexturePro(picked_up->get_image(), picked_up->get_source(), \
+                    picked_up->get_boundaries(point, scale), \
+                    picked_up->get_offset_location(scale), 0, RAYWHITE);
+        }
+        else
+            DrawTexturePro(sprite->get_image(), sprite->get_source(), \
+                sprite->get_boundaries(bounds, scale), \
+                sprite->get_offset_location(bounds, scale), 0, RAYWHITE);
     }
     void        set_unit_id(int id) { unit_id = id; }
     int         get_unit_id(void) { return (unit_id); }

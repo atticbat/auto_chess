@@ -28,6 +28,23 @@ Vector2     get_screen_dim(void)
         (float) (parse_resolution(parse_choice(0)) / 16) * 9 });
 }
 
+float   get_sprite_size(void)
+{
+    int choice = parse_choice(1);
+    switch (choice)
+    {
+        case 0:
+            return (1);
+        case 1:
+            return (0.75);
+        case 2:
+            return (0.5);
+        case 3:
+            return (0.25);
+    }
+    return (0.5);
+}
+
 void    initialise_settings(std::multimap <gui_type, gui_base *> *gui)
 {
     mINI::INIFile   file ("data/settings_gui.ini");
@@ -65,51 +82,70 @@ void    initialise_settings(std::multimap <gui_type, gui_base *> *gui)
         dropdown->set_text(i - 10, 6, 24, file);
         dropdown->choice = parse_choice(i - 10); 
         if (i == 10)
+        {
             dropdown->set_default(parse_resolution(dropdown->choice), \
                 (parse_resolution(dropdown->choice) / 16) * 9);
+            dropdown->set_is_resolution(true);
+        }
         dropdown->set_id(i);
         gui->insert(std::pair<gui_type, gui_base *> (G_DROPDOWN, dropdown));
     }
 }
 
-void    apply_settings(std::multimap <gui_type, gui_base *> *gui, Vector2 \
-    *screen_dim, Vector2 max_dim, Vector2 settings_dim)
+void    apply_settings(std::multimap <gui_type, gui_base *> *gui, \
+    game_settings *settings, default_run *user)
 {
     mINI::INIFile file ("data/settings_gui.ini");
 
     if (check_checkbox(find_gui_by_id(gui, 5, G_CHECKBOX)) && \
         !IsWindowFullscreen())
     {
-        screen_dim->x = max_dim.x;
-        screen_dim->y = max_dim.y;
-        SetWindowSize(screen_dim->x, screen_dim->y);
+        settings->screen_dim.x = settings->max_dim.x;
+        settings->screen_dim.y = settings->max_dim.y;
+        SetWindowSize(settings->screen_dim.x, settings->screen_dim.y);
         ToggleFullscreen();
-        set_boundaries(gui, (screen_dim->x - settings_dim.x) / 2, \
-            (screen_dim->y - settings_dim.y) / 2, file, 1);
+        set_boundaries(gui, (settings->screen_dim.x - \
+            settings->settings_dim.x) / 2, (settings->screen_dim.y - \
+            settings->settings_dim.y) / 2, file, 1);
     }
     else if (!check_checkbox(find_gui_by_id(gui, 5, G_CHECKBOX)) && \
         IsWindowFullscreen())
     {
         ToggleFullscreen();
-        screen_dim->x = check_default_x(find_gui_by_id(gui, 10, G_DROPDOWN));
-        screen_dim->y = check_default_y(find_gui_by_id(gui, 10, G_DROPDOWN));
-        SetWindowSize(screen_dim->x, screen_dim->y);
-        set_boundaries(gui, (screen_dim->x - settings_dim.x) / 2, \
-            (screen_dim->y - settings_dim.y) / 2, file, 1);
+        settings->screen_dim.x = check_default_x(find_gui_by_id(gui, 10, \
+            G_DROPDOWN));
+        settings->screen_dim.y = check_default_y(find_gui_by_id(gui, 10, \
+            G_DROPDOWN));
+        SetWindowSize(settings->screen_dim.x, settings->screen_dim.y);
+        set_boundaries(gui, (settings->screen_dim.x - \
+            settings->settings_dim.x) / 2, (settings->screen_dim.y - \
+            settings->settings_dim.y) / 2, file, 1);
     }
     else if (!IsWindowFullscreen())
     {
-        screen_dim->x = check_default_x(find_gui_by_id(gui, 10, G_DROPDOWN));
-        screen_dim->y = check_default_y(find_gui_by_id(gui, 10, G_DROPDOWN));
-        SetWindowSize(screen_dim->x, screen_dim->y);
-        set_boundaries(gui, (screen_dim->x - settings_dim.x) / 2, \
-            (screen_dim->y - settings_dim.y) / 2, file, 1);
+        settings->screen_dim.x = check_default_x(find_gui_by_id(gui, 10, \
+            G_DROPDOWN));
+        settings->screen_dim.y = check_default_y(find_gui_by_id(gui, 10, \
+            G_DROPDOWN));
+        SetWindowSize(settings->screen_dim.x, settings->screen_dim.y);
+        set_boundaries(gui, (settings->screen_dim.x - \
+            settings->settings_dim.x) / 2, (settings->screen_dim.y - \
+            settings->settings_dim.y) / 2, file, 1);
     }
     mINI::INIStructure ini;
     char    holder[5];
+    file.read(ini);
     ft_itoa(check_dropdown_choice(find_gui_by_id(gui, 10, G_DROPDOWN)), \
         holder);
-    file.read(ini);
     ini["DropdownDefaultChoice"]["0"] = holder;
+    ft_itoa(check_dropdown_choice(find_gui_by_id(gui, 11, G_DROPDOWN)), \
+        holder);
+    ini["DropdownDefaultChoice"]["1"] = holder;
     file.write(ini);
+    file.reset("data/user_settings.ini");
+    file.read(ini);
+    ini["UserSettings"]["ssize"] = holder;
+    file.write(ini);
+    user->set_sprite_size(check_dropdown_choice(find_gui_by_id(gui, 11, \
+        G_DROPDOWN)));
 }

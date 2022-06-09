@@ -17,16 +17,16 @@ void    set_boundaries(std::multimap <gui_type, gui_base *> *gui, \
 }
 
 static void draw_sprites(std::multimap <gui_type, gui_base *> *gui, \
-    Vector2 mouse_point)
+    game_settings settings)
 {
     auto    range = gui->equal_range(G_DRAG_DROP);
 
     for (auto i = range.first; i != range.second; ++i)
-        draw_drag_drops(i->second, mouse_point);
+        draw_drag_drops(i->second, settings);
 }
 
-void    draw_gui(std::multimap <gui_type, gui_base *> *gui, Vector2 \
-    screen_dim, Vector2 set_dim, Vector2 mouse_point)
+void    draw_gui(std::multimap <gui_type, gui_base *> *gui, game_settings \
+    settings)
 {
     for (std::multimap <gui_type, gui_base *>::iterator i = gui->begin(); \
         i != gui->end(); ++i)
@@ -93,7 +93,7 @@ void    draw_gui(std::multimap <gui_type, gui_base *> *gui, Vector2 \
             default: break ;
         }
     }
-    draw_sprites(gui, mouse_point);
+    draw_sprites(gui, settings);
 }
 
 
@@ -119,13 +119,13 @@ void    del_gui(std::multimap <gui_type, gui_base *> *gui)
 }
 
 game_state  check_gui(std::multimap <gui_type, gui_base *> *gui, \
-    Vector2 mouse_point, game_state current_state, default_run *user)
+    game_settings settings, default_run *user)
 {
-    current_state = check_buttons(gui, current_state);
-    check_dropdowns(gui, mouse_point);
-    check_textboxes(gui, mouse_point);
-    check_drag_drops(gui, mouse_point, user);
-    if (current_state == DRAFT)
+    settings.state = check_buttons(gui, settings.state);
+    check_dropdowns(gui, settings.mouse_point);
+    check_textboxes(gui, settings.mouse_point);
+    check_drag_drops(gui, settings.mouse_point, user);
+    if (settings.state == DRAFT)
         update_label(find_gui_by_id(gui, 0, G_DYNAMIC_LABEL), user);
-    return (current_state);
+    return (settings.state);
 }

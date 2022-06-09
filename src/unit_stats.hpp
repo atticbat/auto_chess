@@ -38,7 +38,7 @@ private:
     bool        is_moving = false;
     bool        is_dead = false;
 public:
-    void initialise_unit (int id, char **unit_db, bool ally, int pos)
+    void initialise_unit (int id, char **unit_db, bool ally, int pos, float scale)
     {
 
         static int  _unique_id = 1;
@@ -52,12 +52,14 @@ public:
         _unique_id++;
         if (allied)
         {
-            bounds = (Rectangle) { (float) (16 + pos) * 128, 400, 128, 256 };
+            bounds = (Rectangle) { (float) (16 + pos) * 256 * scale, 400, 256 \
+                * scale, 512 * scale };
             direction = 1;
         }
         else
         {
-            bounds = (Rectangle) { (float) (40 - pos) * 128, 400, 128, 256 };
+            bounds = (Rectangle) { (float) (40 - pos) * 256 * scale, 400, 256 \
+                * scale, 512 * scale };
             direction = -1;
         }
         attack = atoi(split[5]);
@@ -132,12 +134,12 @@ public:
     bool        get_cast_spell(void) { return (cast_spell); }
     bool        get_is_moving(void) { return (is_moving); }
     bool        get_is_dead(void) { return (is_dead); }
-    void        set_gauge_bounds(void)
+    void        set_gauge_bounds(float scale)
     {
         for (int i = 0; i < 3; i++)
         {
-            gauge_bounds[i] = (Rectangle) { bounds.x, bounds.y + 256 + \
-                (i * 16), (gauges[i] / max_gauges[i]) * 127, 16 };
+            gauge_bounds[i] = (Rectangle) { bounds.x, bounds.y + 512 * scale \
+                + (i * 16), (gauges[i] / max_gauges[i]) * (248 * scale), 16 };
         }
     }
     void        multiplier_atk(int amount) { attack *= amount; }

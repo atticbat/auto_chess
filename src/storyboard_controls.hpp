@@ -17,12 +17,12 @@ void        drag_drop_controls(std::multimap <gui_type, gui_base *> *gui, \
 
 void        set_boundaries(std::multimap <gui_type, gui_base *> *gui, \
     int off_x, int off_y, mINI::INIFile file, float scale);
-void        draw_gui(std::multimap <gui_type, gui_base *> *gui, Vector2 \
-    screen_dim, Vector2 set_dim, Vector2 mouse_point);
+void        draw_gui(std::multimap <gui_type, gui_base *> *gui, game_settings \
+    settings);
 gui_base    *find_gui_by_id(std::multimap <gui_type, gui_base*> *gui, int \
     id, gui_type state);
 void        del_gui(std::multimap <gui_type, gui_base *> *gui);
 game_state  check_gui(std::multimap <gui_type, gui_base *> *gui, \
-    Vector2 mouse_point, game_state current_state, default_run *user);
+    game_settings settings, default_run *user);
 
 #endif

@@ -17,6 +17,7 @@ private:
     int     store[5] = { 0, 0, 0, 0, 0 };
     int     wins = 0;
     int     losses = 0;
+    int     sprite_size = 1;
 public:
     int     get_gold(void) { return (gold); }
     int     get_level(void) { return (level); }
@@ -28,6 +29,7 @@ public:
     int     get_store_slot(int slot) { return (store[slot]); }
     int     get_wins(void) { return (wins); }
     int     get_losses(void) { return (losses); }
+    int     get_sprite_size(void) { return (sprite_size); }
     void    set_gold(int amount) { gold = amount; }
     void    add_gold(int amount) { gold += amount; }
     void    deduct_gold(int amount) { gold -= amount; }
@@ -67,6 +69,7 @@ public:
     void    add_win(void) { wins++; }
     void    set_losses(int amount) { losses = amount; }
     void    add_loss(void) { losses++; }
+    void    set_sprite_size(int option) { sprite_size = option; }
 };
 
 void    write_changes(default_run *user);

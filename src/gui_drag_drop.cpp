@@ -248,15 +248,17 @@ void    del_sprites(std::multimap <gui_type, gui_base *> *gui)
     }
 }
 
-void    draw_drag_drops(gui_base *gui, Vector2 mouse_point)
+void    draw_drag_drops(gui_base *gui, game_settings settings)
 {
     gui_drag_drop   *drag_drop = dynamic_cast <gui_drag_drop *> (gui);
 
     if (drag_drop && drag_drop->get_is_picked_up())
-        drag_drop->draw_sprite(mouse_point);
+        drag_drop->draw_sprite(settings.mouse_point, settings.sprite_size, \
+        true);
     else if (drag_drop && drag_drop->get_display() && \
         drag_drop->get_sprite_id())
-        drag_drop->draw_sprite((Vector2) {0, 0});
+        drag_drop->draw_sprite((Vector2) { 0, 0 }, settings.sprite_size, \
+        false);
 }
 
 void    check_drag_drops(std::multimap <gui_type, gui_base *> *gui, \

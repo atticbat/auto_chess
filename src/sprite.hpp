@@ -8,11 +8,8 @@
 class sprite_base
 {
 protected:
-    const char  *modes[8] = { "RightSpriteAddresses1x", \
-        "RightSpriteAddresses2x", "RightSpriteAddresses3x", \
-        "RightSpriteAddresses4x", "LeftSpriteAddresses1x", \
-        "LeftSpriteAddresses2x", "LeftSpriteAddresses3x", \
-        "LeftSpriteAddresses4x" }; 
+    const char  *modes[3] = { "RightSpriteAddresses3x", \
+        "RightSpriteAddresses4x", "LeftSpriteAddresses4x" }; 
     float       width;
     int         unit_id;
     Texture2D   image;
@@ -45,6 +42,16 @@ public:
         source = { width * state, 0, width, (float) image.height };
     }
     void        set_unit_id(int id) { unit_id = id; }
+    virtual Rectangle   get_boundaries(Rectangle offset, float scale)
+    {
+        return (Rectangle { offset.x, offset.y, width * scale, image.height \
+            * scale});
+    }
+    virtual Vector2 get_offset_location(Rectangle offset, float scale)
+    {
+        return ((Vector2) { -(offset.width - width * scale) / 2, \
+            image.height * scale - (offset.height / 2) });
+    }
     int         get_unit_id (void) { return (unit_id); }
     Rectangle   get_source(void) { return (source); }
     Texture2D   get_image(void) { return (image); }
@@ -60,14 +67,15 @@ public:
     {
         UnloadTexture(image);
     }
-    Vector2 get_offset_location(Vector2 mouse_point)
+    Vector2 get_offset_location(float scale)
     {
-        return ((Vector2) { width / 2, source.height * 9 / 10});
+        return ((Vector2) { (width / 2) * scale, (source.height * 9 / 10) * \
+            scale});
     }
-    Rectangle   get_boundaries(Vector2 mouse_point)
+    Rectangle   get_boundaries(Vector2 offset, float scale)
     {
-        return (Rectangle { mouse_point.x, mouse_point.y, width * 1 / 2, \
-            source.height * 1 / 2 });
+        return (Rectangle {offset.x, offset.y, width * scale, image.height * \
+            scale});
     }
 };
 
@@ -118,6 +126,17 @@ public:
             state = starts[current_ani];
         else
             state = 1;
+    }
+    virtual Rectangle   get_boundaries(Rectangle offset, float scale, int \
+        scroll_x)
+    {
+        return (Rectangle { offset.x + scroll_x, offset.y, width * \
+            scale, image.height * scale});
+    }
+    virtual Vector2 get_offset_location(Rectangle offset, float scale)
+    {
+        return ((Vector2) { -(offset.width - width * scale) / 2, \
+            image.height * scale - offset.height });
     }
     void    set_despawn(void) { despawn = true; }
     bool    get_despawn(void) { return (despawn); }
