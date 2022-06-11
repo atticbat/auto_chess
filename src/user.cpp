@@ -31,6 +31,8 @@ void    write_changes(default_run *user)
     ini["UserSettings"]["level"] = holder;
     ft_itoa(user->get_exp(), holder);
     ini["UserSettings"]["exp"] = holder;
+    ft_itoa(user->get_exp_cap(), holder);
+    ini["UserSettings"]["max_exp"] = holder;
     ft_itoa(user->get_wins(), holder);
     ini["UserSettings"]["wins"] = holder;
     ft_itoa(user->get_losses(), holder);

@@ -17,6 +17,6 @@ char        **initialise_unit_db(void);
     **unit_db);
 void        edit_unit(std::multimap <gui_type, gui_base*> *gui, char \
     **unit_db);
-void        del_db(char **unit_db);
+char        **del_db(char **unit_db);
 
 #endif

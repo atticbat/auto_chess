@@ -1,5 +1,36 @@
 #include "draft.hpp"
 
+void    update_dlabels(std::multimap <gui_type, gui_base *> *gui, \
+    default_run *user)
+{
+    auto    range = gui->equal_range(G_DYNAMIC_LABEL);
+
+    for (auto i = range.first; i != range.second; ++i)
+    {
+        gui_dynamic_label   *label = dynamic_cast <gui_dynamic_label *> \
+            (i->second);
+        
+        if (!label)
+            continue ;
+        if (label->get_id() == 0)
+            label->update_text(user->get_gold(), false); 
+        else if (label->get_id() == 1)
+            label->update_text(user->get_level(), false);
+        else if (label->get_id() == 2)
+            label->update_text((int) 100 * user->get_t1_odds(), true);
+        else if (label->get_id() == 3)
+            label->update_text((int) 100 * user->get_t2_odds(), true);
+        else if (label->get_id() == 4)
+            label->update_text((int) 100 * user->get_t3_odds(), true);
+        else if (label->get_id() == 5)
+            label->update_text((int) 100 * user->get_t4_odds(), true);
+        else if (label->get_id() == 6)
+            label->update_text(user->get_wins(), false);
+        else if (label->get_id() == 7)
+            label->update_text(user->get_losses(), false); 
+    }
+}
+
 static gui_dynamic_label    *generate_dlabel(default_run *user, int i)
 {
     gui_dynamic_label   *label = new gui_dynamic_label;
@@ -9,10 +40,20 @@ static gui_dynamic_label    *generate_dlabel(default_run *user, int i)
     label->set_text(i, 1, 32, file);
     if (i == 0)
         label->update_text(user->get_gold(), false); 
-    else if ((i < 2 || i > 5) && i < 9)
-        label->update_text(label_defaults[i], false);
-    else if (i >= 2 && i <= 5)
-        label->update_text(label_defaults[i], true);
+    else if (i == 1)
+        label->update_text(user->get_level(), false);
+    else if (i == 2)
+        label->update_text((int) 100 * user->get_t1_odds(), true);
+    else if (i == 3)
+        label->update_text((int) 100 * user->get_t2_odds(), true);
+    else if (i == 4)
+        label->update_text((int) 100 * user->get_t3_odds(), true);
+    else if (i == 5)
+        label->update_text((int) 100 * user->get_t4_odds(), true);
+    else if (i == 6)
+        label->update_text(user->get_wins(), false);
+    else if (i == 7)
+        label->update_text(user->get_losses(), false);
     label->set_id(i);
     return (label);
 }
@@ -63,38 +104,61 @@ void    initialise_draft (std::multimap <gui_type, gui_base *> *gui, \
         bar->set_id(i);
         gui->insert(std::pair<gui_type, gui_base *> (G_PROGRESS_BAR, bar));
     }
-
+    write_changes(user);
 }
 
 void    reroll_shop(std::multimap <gui_type, gui_base *> *gui, default_run \
     *user)
 {
     mINI::INIFile   file ("data/draft_gui.ini");
-   int              available_units[5] = { 1, 3, 4, 5, 42 };
+    int              available_units[5] = { 1, 3, 4, 5, 42 };
     auto            range = gui->equal_range(G_DRAG_DROP);
-
-    for (auto i = range.first; i != range.second; ++i)
+    
+    if (user->get_gold() > 0)
     {
-        if (i->first == G_DRAG_DROP)
+        for (auto i = range.first; i != range.second; ++i)
         {
-            gui_drag_drop   *drag_drop = dynamic_cast <gui_drag_drop *> \
-                (i->second);
-
-            if (drag_drop && !(drag_drop->get_display()))
+            if (i->first == G_DRAG_DROP)
             {
-                drag_drop->set_unit_id(available_units[rand() % 5]);
-                user->set_store(drag_drop->get_gui_id(), \
-                    drag_drop->get_unit_id());
+                gui_drag_drop   *drag_drop = dynamic_cast <gui_drag_drop *> \
+                    (i->second);
+
+                if (drag_drop && !(drag_drop->get_display()))
+                {
+                    drag_drop->set_unit_id(available_units[rand() % 5]);
+                    user->set_store(drag_drop->get_gui_id(), \
+                        drag_drop->get_unit_id());
+                }
             }
         }
+        user->deduct_gold(1);
+        write_changes(user);
     }
 }
 
 void    reroll_shop_user(default_run *user)
 {
-   int              available_units[5] = { 1, 3, 4, 5, 42 };
+   int  available_units[5] = { 1, 3, 4, 5, 42 };
 
     for (int i = 0; i < 5; i++)
         user->set_store(i, available_units[rand() % 5]);
+    write_changes(user);
 }
 
+void    buy_xp(std::multimap <gui_type, gui_base *> *gui, default_run *user)
+{
+    gui_progress_bar *bar = dynamic_cast <gui_progress_bar *> \
+        (find_gui_by_id(gui, 36, G_PROGRESS_BAR));
+    if (user->get_gold() > 0)
+    {
+        user->deduct_gold(1);
+        user->add_exp(2);
+        if (bar)
+        {
+            bar->set_value(user->get_exp());
+            bar->set_max(user->get_exp_cap());
+        }
+        update_dlabels(gui, user);
+        write_changes(user);
+    }
+}

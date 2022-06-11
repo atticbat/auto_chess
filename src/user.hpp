@@ -8,13 +8,17 @@ class default_run
 {
 private:
     int     gold = 10;
-    int     level = 1;
+    int     level = 0;
     int     exp = 0;
     int     exp_cap = 8;
     int     roster[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
     int     unit_exp[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
     int     unit_max_exp[8] = { 2, 2, 2, 2, 2, 2, 2, 2 };
     int     store[5] = { 0, 0, 0, 0, 0 };
+    float   t1_odds[10] = { 1, 0.8, 0.6, 0.4, 0.3, 0.25, 0.1, 0.1, 0.05, 0.05 };
+    float   t2_odds[10] = { 0, 0.2, 0.3, 0.4, 0.3, 0.25, 0.2, 0.1, 0.05, 0.05 };
+    float   t3_odds[10] = { 0, 0, 0.1, 0.2, 0.3, 0.3, 0.4, 0.45, 0.5, 0.4 };
+    float   t4_odds[10] = { 0, 0, 0, 0, 0.1, 0.2, 0.3, 0.35, 0.4, 0.5 };
     int     wins = 0;
     int     losses = 0;
     int     sprite_size = 1;
@@ -32,6 +36,10 @@ public:
     int     get_losses(void) { return (losses); }
     int     get_sprite_size(void) { return (sprite_size); }
     bool    get_ongoing_game(void) { return (ongoing_game); }
+    float   get_t1_odds(void) { return (t1_odds[level]); }
+    float   get_t2_odds(void) { return (t2_odds[level]); }
+    float   get_t3_odds(void) { return (t3_odds[level]); }
+    float   get_t4_odds(void) { return (t4_odds[level]); }
     void    set_gold(int amount) { gold = amount; }
     void    add_gold(int amount) { gold += amount; }
     void    deduct_gold(int amount) { gold -= amount; }
@@ -39,12 +47,15 @@ public:
     void    add_level(void) { level++; }
     void    add_exp(int amount)
     {
-        exp += amount;
+        if (level < 9)
+            exp += amount;
         if (exp >= exp_cap)
         {
             exp = exp % exp_cap;
             exp_cap += 4;
             add_level();
+            if (level == 9)
+                exp = 0;
         }
     }
     void    set_exp(int amount) { exp = amount; }

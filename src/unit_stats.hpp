@@ -39,6 +39,11 @@ private:
 public:
     void    re_init(void)
     {
+        for (int i = 0; i < 3; i++)
+        {
+            gauges[i] = 0;
+            max_gauges[i] = 100;
+        }
         unique_id = 0;
         unit_id = 0;
         perform_attack = false;

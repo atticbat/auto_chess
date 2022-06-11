@@ -58,24 +58,6 @@ static void swap_xp_bars(std::multimap <gui_type, gui_base *> *gui, \
     }
 }
 
-// gui_drag_drop   *generate_drag_drop(default_run *user, int i, mINI::INIFile \
-//     file, bool roster_item)
-// {
-//     gui_drag_drop   *drag_drop = new gui_drag_drop;
-
-//     drag_drop->set_unit_id(user->get_store_slot(i));
-//     drag_drop->set_text(i, 8, 24, file);
-//     // drag_drop->set_id(i);
-//     if (roster_item)
-//     {
-//         if (drag_drop->get_unit_id())
-//             drag_drop->generate_static_sprite (drag_drop->get_unit_id(), \
-//                 2, file);
-//         drag_drop->set_display(true);
-//     }
-//     return (drag_drop);
-// }
-
 static bool check_same_unit(int drag_unit, int drop_unit)
 {
     if (drag_unit >= 1 && drag_unit <= 40)
@@ -156,6 +138,7 @@ static int  handle_drop(std::multimap <gui_type, gui_base *> *gui, \
             user->set_unit(drag->get_gui_id() - 5, drag->get_sprite_id());
         user->set_unit(drop->get_gui_id() - 5, drop->get_unit_id());
     }
+    write_changes(user);
     return (drop->get_unit_id());
 }
 

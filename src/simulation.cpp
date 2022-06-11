@@ -27,9 +27,9 @@ void    initialise_simulation(std::map <int, sprite_multi *> *sprites, \
         sprites->begin(); i != sprites->end(); )
     {
         delete(i->second);
-        i = sprites->erase(i);
         i++; 
     }
+    sprites->clear();
     for (int i = 0; i < 56; i++)
         battle[i].re_init();
     for (int i = 0; i < 8; i++)
@@ -124,7 +124,7 @@ static void unit_melee_attack(std::multimap <particle_type, particle *> \
 }
 
 static void unit_ranged_attack(std::multimap <particle_type, particle *> \
-    *particles, int i, int x_offset, sprite_multi *sprite)
+    *particles, int i, game_settings settings, sprite_multi *sprite)
 {
     if (battle[i].get_unit_id() && battle[i].get_max_range() > 1 && \
         battle[i].get_perform_attack())
@@ -143,7 +143,7 @@ static void unit_ranged_attack(std::multimap <particle_type, particle *> \
             std::random_shuffle(viable_targets.begin(), \
                 viable_targets.end());
             particle_projectile *projectile = new particle_projectile(BLACK, \
-                battle[i], battle[viable_targets.front()], x_offset + 64);
+                battle[i], battle[viable_targets.front()], settings);
 
             particles->insert(std::pair<particle_type, particle_projectile *> \
                 (P_PROJECTILE, projectile));
@@ -178,41 +178,39 @@ static void despawn_gui(std::multimap <gui_type, gui_base *> *gui, int index)
     }
 }
 
-game_state  simulation(std::multimap <particle_type, particle *> *particles, \
-    std::map <int, sprite_multi *> *sprites, game_settings *settings, \
-    default_run *user, std::multimap <gui_type, gui_base *> *gui)
+static void unit_actions(std::multimap <particle_type, particle *> *particles, \
+    std::map <int, sprite_multi *> *sprites, game_settings *settings)
 {
-    settings->x_offset += scroll_controls(settings->x_offset, \
-        settings->sprite_size, settings->screen_dim.x);
-    if (settings->frame_count % 8 == 0)
+    for (int i = 0; i < 56; i++)
     {
-        for (int i = 0; i < 56; i++)
+        int j = move_order[i];
+        if (j < 8 || j > 48)
+            continue;
+        auto    search = sprites->find(battle[j].get_unique_id());
+        if (search != sprites->end())
         {
-            int j = move_order[i];
-            if (j < 8 || j > 48)
-                continue;
-            auto    search = sprites->find(battle[j].get_unique_id());
-            if (search != sprites->end())
-            {
-                unit_movement(j, search->second, settings->sprite_size);
-                battle[j].increase_atk_gauge();
-                unit_melee_attack(particles, j, settings->x_offset, \
+            unit_movement(j, search->second, settings->sprite_size);
+            battle[j].increase_atk_gauge();
+            unit_melee_attack(particles, j, settings->x_offset, \
+                search->second);
+            if (!(battle[j].get_projectile_mid_flight()))
+                unit_ranged_attack(particles, j, *settings, \
                     search->second);
-                if (!(battle[j].get_projectile_mid_flight()))
-                    unit_ranged_attack(particles, j, settings->x_offset, \
-                        search->second);
-                if (battle[j].get_is_dead())
-                {
-                    battle[j].destroy_unit();
-                    search->second->set_despawn();
-                }
+            if (battle[j].get_is_dead())
+            {
+                battle[j].destroy_unit();
+                search->second->set_despawn();
             }
         }
-        for (auto i = sprites->begin(); i != sprites->end(); ++i)
-            i->second->increment_state();
     }
-    int ally_count = 0;
-    int enemy_count = 0;
+    for (auto i = sprites->begin(); i != sprites->end(); ++i)
+        i->second->increment_state();
+}
+
+static Vector2  unit_adjust(game_settings *settings)
+{
+    float   ally_count = 0;
+    float   enemy_count = 0;
     for (int i = 0; i < 56; i++)
     {
         battle[i].adjust_sprite();
@@ -222,38 +220,49 @@ game_state  simulation(std::multimap <particle_type, particle *> *particles, \
         else if (!(battle[i].get_allied()) && battle[i].get_unit_id())
             enemy_count++;
     }
-    if (ally_count == 0 && user->get_ongoing_game())
+    return (Vector2 {ally_count, enemy_count});
+}
+
+static void game_over(Vector2 unit_count, game_settings *settings, \
+    std::multimap <gui_type, gui_base *> *gui)
+{
+    if (unit_count.x == 0 && settings->user->get_ongoing_game())
     {
         despawn_gui(gui, 1);
-        user->toggle_ongoing_game();
-        user->add_gold(5);
-        user->add_exp(4);
-        user->add_loss();
+        settings->user->toggle_ongoing_game();
+        settings->user->add_gold(5);
+        settings->user->add_exp(4);
+        settings->user->add_loss();
         gui_base    *label = new gui_base;
         mINI::INIFile       file ("data/simulation_gui.ini");
         label->set_text(0, 0, 128, file);
         label->set_id(1);
         gui->insert(std::pair <gui_type, gui_base *> (G_HITBOX, label));
         set_boundaries(gui, 0, 0, file, settings->scale);
-        reroll_shop_user(user);
-        write_changes(user);
+        reroll_shop_user(settings->user);
+        write_changes(settings->user);
     }
-    else if (enemy_count == 0 && user->get_ongoing_game())
+    else if (unit_count.y == 0 && settings->user->get_ongoing_game())
     {
         despawn_gui(gui, 1);
-        user->toggle_ongoing_game();
-        user->add_gold(5);
-        user->add_exp(4);
-        user->add_win();
+        settings->user->toggle_ongoing_game();
+        settings->user->add_gold(5);
+        settings->user->add_exp(4);
+        settings->user->add_win();
         gui_base    *label = new gui_base;
         mINI::INIFile       file ("data/simulation_gui.ini");
         label->set_text(1, 0, 128, file);
         label->set_id(1);
         gui->insert(std::pair <gui_type, gui_base *> (G_HITBOX, label));
         set_boundaries(gui, 0, 0, file, settings->scale);
-        reroll_shop_user(user);
-        write_changes(user);
+        reroll_shop_user(settings->user);
+        write_changes(settings->user);
     }
+}
+
+static void process_particles(std::multimap <particle_type, particle *> \
+    *particles, game_settings *settings)
+{
     for (std::multimap <particle_type, particle *>::iterator i = \
         particles->begin(); i != particles->end(); ++i)
     {
@@ -297,7 +306,21 @@ game_state  simulation(std::multimap <particle_type, particle *> *particles, \
             default : break ;
         } 
     }
-    return (SIMULATION);
+}
+
+void    simulation(std::multimap <particle_type, particle *> *particles, \
+    std::map <int, sprite_multi *> *sprites, game_settings *settings, \
+    std::multimap <gui_type, gui_base *> *gui)
+{
+    Vector2 unit_count = (Vector2) { 0, 0 };
+
+    settings->x_offset += scroll_controls(settings->x_offset, \
+        settings->sprite_size, settings->screen_dim.x);
+    if (settings->frame_count % 8 == 0)
+        unit_actions(particles, sprites, settings);
+    unit_count = unit_adjust(settings);
+    game_over(unit_count, settings, gui);
+    process_particles(particles, settings);
 }
 
 static void despawn_particles(std::multimap <particle_type, particle *> *particles)
@@ -323,8 +346,7 @@ static void despawn_particles(std::multimap <particle_type, particle *> *particl
     }
 }
 
-void    draw_simulation(std::multimap <particle_type, particle *> *particles, \
-    std::map <int, sprite_multi *> *sprites, game_settings settings)
+static void draw_battle(std::map <int, sprite_multi *> *sprites, game_settings settings)
 {
     for (int i = 0; i < 56; i++)
     {
@@ -354,6 +376,10 @@ void    draw_simulation(std::multimap <particle_type, particle *> *particles, \
         DrawRectangleLines(256 * settings.sprite_size * i + settings.x_offset, 400, \
             256 * settings.sprite_size, 512 * settings.sprite_size, BLACK);
     }
+}
+
+static void draw_particles(std::multimap <particle_type, particle *> *particles)
+{
     for (std::multimap <particle_type, particle *>::iterator i = \
         particles->begin(); i != particles->end(); ++i)
     {
@@ -385,6 +411,13 @@ void    draw_simulation(std::multimap <particle_type, particle *> *particles, \
             } break ;
             default : break ;
         }
-    }
+    } 
+}
+
+void    draw_simulation(std::multimap <particle_type, particle *> *particles, \
+    std::map <int, sprite_multi *> *sprites, game_settings settings)
+{
+    draw_battle(sprites, settings);
+    draw_particles(particles);
     despawn_particles(particles);
 }

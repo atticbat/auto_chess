@@ -23,6 +23,6 @@ gui_base    *find_gui_by_id(std::multimap <gui_type, gui_base*> *gui, int \
     id, gui_type state);
 void        del_gui(std::multimap <gui_type, gui_base *> *gui);
 game_state  check_gui(std::multimap <gui_type, gui_base *> *gui, \
-    game_settings settings, default_run *user);
+    game_settings *settings);
 
 #endif

@@ -8,7 +8,7 @@ FUNCTS	=	main.cpp sprite.cpp menu.cpp ft_itoa.cpp settings.cpp draft.cpp \
 			gui_slider.cpp gui_scrollbar.cpp gui_dropdown.cpp \
 			storyboard_controls.cpp gui_textbox.cpp gui_drag_drop.cpp \
 			gui_dynamic_label.cpp user.cpp get_next_line_utils.cpp \
-			get_next_line.cpp ft_split.cpp simulation.cpp
+			get_next_line.cpp ft_split.cpp simulation.cpp controls.cpp
 OBJS	=	$(addprefix _bin/,$(notdir $(FUNCTS:.cpp=.o)))
 BREW	=	$(shell brew --prefix)
 CC		=	g++

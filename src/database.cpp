@@ -210,11 +210,15 @@ char    **initialise_unit_db(void)
     return (db);
 }
 
-void    del_db(char **unit_db)
+char    **del_db(char **unit_db)
 {
-    for (int i = 0; i < 128; i++)
+    if (unit_db)
     {
-        free (unit_db[i]);
+        for (int i = 0; i < 128; i++)
+        {
+            free (unit_db[i]);
+        }
+        free (unit_db); 
     }
-    free (unit_db);
+    return (NULL);
 }

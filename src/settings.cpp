@@ -93,7 +93,7 @@ void    initialise_settings(std::multimap <gui_type, gui_base *> *gui)
 }
 
 void    apply_settings(std::multimap <gui_type, gui_base *> *gui, \
-    game_settings *settings, default_run *user)
+    game_settings *settings)
 {
     mINI::INIFile file ("data/settings_gui.ini");
 
@@ -146,6 +146,30 @@ void    apply_settings(std::multimap <gui_type, gui_base *> *gui, \
     file.read(ini);
     ini["UserSettings"]["ssize"] = holder;
     file.write(ini);
-    user->set_sprite_size(check_dropdown_choice(find_gui_by_id(gui, 11, \
+    settings->user->set_sprite_size(check_dropdown_choice(find_gui_by_id(gui, 11, \
         G_DROPDOWN)));
+}
+
+void    update_sprite_size(game_settings *settings, int index)
+{
+    switch (index)
+    {
+        case 0:
+        {
+            settings->sprite_size = 1;
+        } break ;
+        case 1:
+        {
+            settings->sprite_size = 0.75;
+        } break ;
+        case 2:
+        {
+            settings->sprite_size = 0.5;
+        } break;
+        case 3:
+        {
+            settings->sprite_size = 0.25;
+        } break ;
+        default: break ;
+    }
 }

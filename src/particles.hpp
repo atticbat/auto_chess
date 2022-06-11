@@ -95,8 +95,9 @@ private:
     int     target_unique_id;
     int     attacker_unique_id;
 public:
-    particle_projectile(Color _colour, unit_stats atk, unit_stats tgt, int \
-        x_offset) : particle(atk.get_bounds(), _colour, x_offset)
+    particle_projectile(Color _colour, unit_stats atk, unit_stats tgt, \
+        game_settings settings) : particle(atk.get_bounds(), _colour, \
+        settings.x_offset)
     {
         allied = atk.get_allied();
         if (allied)
@@ -105,14 +106,15 @@ public:
             direction = -1;
         bounds.width = 16;
         bounds.height = 16;
-        attacker.x = atk.get_bounds().x;
-        attacker.y = bounds.y;
-        target.x = tgt.get_bounds().x + (UNIT_WIDTH / 2);
-        target.y = tgt.get_bounds().y;
+        attacker.x = atk.get_bounds().x + ((256 * settings.sprite_size) / 2);
+        attacker.y = bounds.y + 128 * settings.sprite_size;
+        target.x = tgt.get_bounds().x + ((256 * settings.sprite_size) / 2);
+        target.y = tgt.get_bounds().y + 128 * settings.sprite_size;
         target_unique_id = tgt.get_unique_id();
         attacker_unique_id = atk.get_unique_id();
         velocity = abs(tgt.get_bounds().x - atk.get_bounds().x) / \
-            (UNIT_WIDTH / 6) - 0.5 * (UNIT_WIDTH / 6) * grav;
+            ((256 * settings.sprite_size) / 10) - 0.5 * ((256 * \
+            settings.sprite_size) / 6) * grav;
         theta = 0.5 * asin(grav * abs(tgt.get_bounds().x - \
             atk.get_bounds().x) / (velocity * velocity));
     }

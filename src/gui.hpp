@@ -21,6 +21,9 @@ typedef struct  s_game_settings
     float       sprite_size;
     int         x_offset;
     game_state  state;
+    default_run *user;
+    bool        initialised = false;
+    bool        new_game = false;
 }               game_settings;
 
 class gui_base
@@ -135,8 +138,8 @@ public:
     }
     void    update_text(int _value, bool _percentage)
     {
-        char    value_string[5];
-        char    text_buffer[10];
+        char    value_string[6];
+        char    text_buffer[12];
 
         value = _value;
         percentage = _percentage;

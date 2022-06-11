@@ -119,13 +119,21 @@ void    del_gui(std::multimap <gui_type, gui_base *> *gui)
 }
 
 game_state  check_gui(std::multimap <gui_type, gui_base *> *gui, \
-    game_settings settings, default_run *user)
+    game_settings *settings)
 {
-    settings.state = check_buttons(gui, settings.state);
-    check_dropdowns(gui, settings.mouse_point);
-    check_textboxes(gui, settings.mouse_point);
-    check_drag_drops(gui, settings.mouse_point, user);
-    if (settings.state == DRAFT)
-        update_label(find_gui_by_id(gui, 0, G_DYNAMIC_LABEL), user);
-    return (settings.state);
+    game_state  state = settings->state;
+
+    settings->state = check_buttons(gui, settings->state);
+    if (state != settings->state && (int)settings->state < 8)
+        settings->initialised = false;
+    // if (settings->state == LOAD)
+    //     settings->new_game = false;
+    // else
+    //     settings->new_game = true;
+    check_dropdowns(gui, settings->mouse_point);
+    check_textboxes(gui, settings->mouse_point);
+    check_drag_drops(gui, settings->mouse_point, settings->user);
+    if (settings->state == DRAFT)
+        update_label(find_gui_by_id(gui, 0, G_DYNAMIC_LABEL), settings->user);
+    return (settings->state);
 }
