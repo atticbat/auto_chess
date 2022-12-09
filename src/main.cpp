@@ -135,6 +135,5 @@ int main(void)
         draw (&gui, settings, &sprites, &particles, unit_db);
     }
     CloseWindow();
-    system("leaks auto_chess");
     return (0);
 }

@@ -1,17 +1,77 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   ft_split.c                                         :+:      :+:    :+:   */
+/*   ft_split.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: khatlas <khatlas@student.42heilbronn.fr>   +#+  +:+       +#+        */
+/*   By: khatlas <khatlas@student.42heilbronn.de    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/07 21:00:30 by khatlas           #+#    #+#             */
-/*   Updated: 2022/04/12 15:07:00 by khatlas          ###   ########.fr       */
+/*   Updated: 2022/12/09 07:40:21 by khatlas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <stdlib.h>
 #include <string.h>
+
+size_t	ft_strlcpy(char *dst, const char *src, size_t n)
+{
+	size_t	len;
+	void	*vdst;
+	void	*vsrc;
+
+	len = strlen (src);
+	if (!n)
+		return (len);
+	vdst = (void *) dst;
+	vsrc = (void *) src;
+	if (len + 1 < n)
+		memcpy (vdst, vsrc, len + 1);
+	else if (len != 0)
+	{
+		memcpy (vdst, vsrc, n - 1);
+		dst[n - 1] = '\0';
+	}
+	return (len);
+}
+
+static const char	*concat(char *d, const char *s, size_t i)
+{
+	while (*s != '\0')
+	{
+		if (i > 1)
+		{
+			*d = *s;
+			d++;
+			i--;
+		}
+		s++;
+	}
+	*d = '\0';
+	return (s);
+}
+
+size_t	ft_strlcat(char *dst, const char *src, size_t n)
+{
+	char		*d;
+	const char	*s;
+	size_t		i;
+	size_t		len;
+
+	d = dst;
+	s = src;
+	i = n;
+	while (*d != '\0' && i > 0)
+	{
+		d++;
+		i--;
+	}
+	len = d - dst;
+	i = n - len;
+	if (i == 0)
+		return (len + strlen(s));
+	s = concat (d, s, i);
+	return (len + (s - src));
+}
 
 static size_t	word_count(char const *s, char c)
 {
@@ -66,7 +126,7 @@ static char	*word_dup(const char *str, int size)
 	word = (char *) malloc ((size + 1) * sizeof (char));
 	if (!word)
 		return (NULL);
-	strlcpy (word, str, size + 1);
+	ft_strlcpy (word, str, size + 1);
 	return (word);
 }
 

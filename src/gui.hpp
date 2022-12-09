@@ -65,7 +65,7 @@ public:
         ft_itoa(gui_id, c);
         file.read(ini);
         i = 0;
-        strlcpy(str, ini.get(bound_modes[mode]).get(c).c_str(), 20);
+        ft_strlcpy(str, ini.get(bound_modes[mode]).get(c).c_str(), 20);
         while (i < 4)
         {
             param[i] = 0;
@@ -99,7 +99,7 @@ public:
         file.read(ini);
         len = ini.get(text_modes[mode]).get(c).size();
         ptr = (char *) malloc (sizeof(char) * len);
-        strlcpy(ptr, ini.get(text_modes[mode]).get(c).c_str(), len + 1);
+        ft_strlcpy(ptr, ini.get(text_modes[mode]).get(c).c_str(), len + 1);
         text = ptr;
     }
     void                set_id(int id) { unique_id = id; }
@@ -132,7 +132,7 @@ public:
         file.read(ini);
         len = ini.get(text_modes[mode]).get(c).size();
         ptr = (char *) malloc (sizeof(char) * len);
-        strlcpy(ptr, ini.get(text_modes[mode]).get(c).c_str(), len + 1);
+        ft_strlcpy(ptr, ini.get(text_modes[mode]).get(c).c_str(), len + 1);
         text = ptr;
         original_length = strlen(text);
     }
@@ -145,13 +145,13 @@ public:
         percentage = _percentage;
         ft_itoa(value, value_string);
         if (percentage)
-            strlcat(value_string, "%", 5);
-        strlcpy(text_buffer, text, 10);
+            ft_strlcat(value_string, "%", 5);
+        ft_strlcpy(text_buffer, text, 10);
         if (text)
             free (text);
         text = (char *) malloc (sizeof(char) * (original_length + strlen(value_string) + 2));
-        strlcpy(text, text_buffer, original_length + 1);
-        strlcat(text, value_string, original_length + strlen(value_string) + 2);
+        ft_strlcpy(text, text_buffer, original_length + 1);
+        ft_strlcat(text, value_string, original_length + strlen(value_string) + 2);
     }
 };
 
@@ -374,7 +374,7 @@ public:
         file.read(ini);
         len = ini.get(text_modes[mode]).get(c).size();
         ptr = (char *) malloc (sizeof(char) * len);
-        strlcpy(ptr, ini.get(text_modes[mode]).get(c).c_str(), len + 1);
+        ft_strlcpy(ptr, ini.get(text_modes[mode]).get(c).c_str(), len + 1);
         text_right = ptr;
     }
     char    *get_text_right(void) { return (text_right); }

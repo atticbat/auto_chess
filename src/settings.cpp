@@ -5,10 +5,14 @@ int parse_resolution(int id)
     mINI::INIFile       file ("data/settings_gui.ini");
     mINI::INIStructure  ini;
     char                c[5];
+	int					buffer;
 
     ft_itoa(id, c);
     file.read(ini);
-    return (stoi(ini.get("ResolutionX").get(c)));
+	buffer = ft_atoi(ini.get("ResolutionX").get(c).c_str());
+	if (buffer == -1)
+		buffer = 960;
+    return (buffer);
 }
 
 static int  parse_choice(int id)
@@ -16,10 +20,14 @@ static int  parse_choice(int id)
     mINI::INIFile       file ("data/settings_gui.ini");
     mINI::INIStructure  ini;
     char                c[5];
+	int					buffer;
 
     ft_itoa(id, c);
     file.read(ini);
-    return (stoi(ini.get("DropdownDefaultChoice").get(c)));
+	buffer = ft_atoi(ini.get("DropdownDefaultChoice").get(c).c_str());
+	if (buffer == -1)
+		buffer = 2;
+    return (buffer);
 }
 
 Vector2     get_screen_dim(void)

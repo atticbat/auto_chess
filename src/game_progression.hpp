@@ -5,6 +5,7 @@
 # define UNIT_WIDTH 128
 
 void	ft_itoa(int n, char *ptr);
+int		ft_atoi(const char *ptr);
 
 typedef enum    game_state{LOADING = 0, MENU, SETTINGS, DRAFT, SIMULATION, \
     DATABASE, EXIT, LOAD, BUY_XP, REROLL, APPLY, EDIT_UNIT} game_state;

@@ -56,7 +56,7 @@ public:
         char    buffer[12];
         ft_itoa(damage, buffer);
         text = (char *) malloc ((strlen(buffer) + 1) * sizeof(char));
-        strlcpy(text, buffer, strlen(buffer) + 2);
+        ft_strlcpy(text, buffer, strlen(buffer) + 2);
         text_size = 20 + (damage / 10);
     }
     ~particle_damage()

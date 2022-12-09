@@ -13,18 +13,17 @@ OBJS	=	$(addprefix _bin/,$(notdir $(FUNCTS:.cpp=.o)))
 BREW	=	$(shell brew --prefix)
 CC		=	g++
 CFLAGS	= 	-std=c++0x -O3
-IFLAGS	=	-I $(BREW)/include
-LFLAGS	=	-L $(BREW)/lib -lraylib -lcurl
+IFLAGS	=	-I raylib-cpp/include
 RM 		=	/bin/rm -f
 
 $(NAME): $(OBJS) 
-	$(CC) $^ $(CFLAGS) -o $@ $(LFLAGS)
+	$(CC) $^ $(CFLAGS) -o $@ $(LFLAGS) -L ./raylib/build/raylib/ -lraylib -lGL -lm -lpthread -ldl -lrt -lX11
 
 _bin:
 	mkdir _bin
 
 _bin/%.o : %.cpp | _bin
-	$(CC) $(CFLAGS) -c -MMD -MP $(IFLAGS) $< -o $@
+	$(CC) $(CFLAGS) -c -MMD -MP $(IFLAGS) $< -o $@ -L ./raylib/build/raylib/ -lraylib -lGL -lm -lpthread -ldl -lrt -lX11 
 
 clean:
 	rm -rf _bin
