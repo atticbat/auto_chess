@@ -7,7 +7,7 @@
 #include <iostream>
 #include <fstream>
 
-int     atoi(const char *str);
+int     ft_atoi(const char *str);
 
 void    set_database_boundaries(std::multimap <gui_type, gui_base *> *gui, Vector2 screen_dim)
 {

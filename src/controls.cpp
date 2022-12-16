@@ -175,7 +175,7 @@ void    initialise_game(game_settings *settings)
         GetScreenHeight() };
     settings->screen_dim = get_screen_dim();
     settings->scale = settings->screen_dim.x / settings->max_dim.x;
-    SetWindowSize(settings->screen_dim.x, settings->screen_dim.y);
+    SetWindowSize(1920, 1080);
     SetTargetFPS(60);
 
     settings->mouse_point = { 0.0f, 0.0f };

@@ -13,8 +13,8 @@ OBJS	=	$(addprefix _bin/,$(notdir $(FUNCTS:.cpp=.o)))
 BREW	=	$(shell brew --prefix)
 CC		=	g++
 CFLAGS	= 	-std=c++0x -O3
-IFLAGS	=	-I $(BREW)/include
-LFLAGS	=	-L $(BREW)/lib -lraylib -lcurl
+IFLAGS	=	-I raylib-cpp/include
+LFLAGS	=	-L ./raylib/build/raylib/ -lraylib -lGL -lm -lpthread -ldl -lrt -lX11 
 RM 		=	/bin/rm -f
 
 $(NAME): $(OBJS) 

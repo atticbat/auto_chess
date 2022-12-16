@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   ft_itoa.c                                          :+:      :+:    :+:   */
+/*   ft_itoa.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: khatlas <khatlas@student.42heilbronn.fr>   +#+  +:+       +#+        */
+/*   By: khatlas <khatlas@student.42heilbronn.de    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/08 19:12:07 by khatlas           #+#    #+#             */
-/*   Updated: 2022/04/09 14:22:54 by khatlas          ###   ########.fr       */
+/*   Updated: 2022/12/09 12:04:39 by khatlas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,4 +63,31 @@ void	ft_itoa(int n, char *ptr)
 	if (len == 0)
 		len = 1;
 	fill_string(ptr, n);
+}
+
+int	ft_atoi(const char *str)
+{
+	long int	total;
+	int			negate;
+
+	total = 0;
+	negate = 1;
+	while ((*str >= 9 && *str <= 13) || *str == ' ')
+		str++;
+	if (*str == '-' || *str == '+')
+	{
+		if (*str == '-')
+			negate = negate * -1;
+		str++;
+	}
+	while (*str >= '0' && *str <= '9')
+	{
+		total = total * 10 + (*str - 48);
+		str++;
+		if (total * negate > 2147483647)
+			return (-1);
+		if (total * negate < -2147483648)
+			return (0);
+	}
+	return ((int) total * negate);
 }
