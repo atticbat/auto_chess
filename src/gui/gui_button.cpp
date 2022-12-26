@@ -14,7 +14,7 @@ gui_button  *generate_button(int i, mINI::INIFile file)
 
     button->set_text(i, 3, 24, file);
     button->set_destination(parse_destination(i, file));
-    button->set_id(i);
+    button->unique_id = i;
     return (button);
 }
 

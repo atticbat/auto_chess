@@ -12,7 +12,7 @@ void    set_boundaries(std::multimap <gui_type, gui_base *> *gui, \
         i != gui->end(); ++i)
     {
         i->second->set_bounds(off_x, off_y, (int)i->first, file, scale);
-        i->second->set_text_size(i->second->get_text_size() * scale);
+        i->second->text_size = i->second->text_size * scale;
     }
 }
 
@@ -36,36 +36,34 @@ void    draw_gui(std::multimap <gui_type, gui_base *> *gui, game_settings \
             case G_LABEL:
             case G_DYNAMIC_LABEL:
             {
-                DrawText(i->second->get_text(), i->second->get_bounds().x, \
-                    i->second->get_bounds().y, i->second->get_text_size(), \
-                    BLACK);
+                DrawText(i->second->text, i->second->bounds.x, \
+                    i->second->bounds.y, i->second->text_size, BLACK);
             } break ;
             case G_HITBOX:
             {
-                GuiDrawRectangle(i->second->get_bounds(), 0, BLACK, BEIGE);
-                DrawText(i->second->get_text(), i->second->get_bounds().x + 16, \
-                    i->second->get_bounds().y + 32, i->second->get_text_size(), \
-                    BLACK); 
+                GuiDrawRectangle(i->second->bounds, 0, BLACK, BEIGE);
+                DrawText(i->second->text, i->second->bounds.x + 16, \
+                    i->second->bounds.y + 32, i->second->text_size, BLACK);
             } break ;
             case G_CHECKBOX:
             {
-                set_checkbox(i->second, GuiCheckBox(i->second->get_bounds(), \
-                    i->second->get_text(), check_checkbox(i->second)));
+                set_checkbox(i->second, GuiCheckBox(i->second->bounds, \
+                    i->second->text, check_checkbox(i->second)));
             } break ;
             case G_BUTTON:
             {
-                set_button(i->second, GuiButton(i->second->get_bounds(), \
-                    i->second->get_text()));
+                set_button(i->second, GuiButton(i->second->bounds, \
+                    i->second->text));
             } break ;
             case G_SLIDER:
             {
-                set_slider(i->second, GuiSliderBar(i->second->get_bounds(), \
+                set_slider(i->second, GuiSliderBar(i->second->bounds, \
                     NULL, NULL, check_slider_value(i->second), \
                     check_slider_min(i->second), check_slider_max(i->second)));
             } break ;
             case G_SCROLLBAR:
             {
-                GuiScrollPanel(i->second->get_bounds(), NULL, \
+                GuiScrollPanel(i->second->bounds, NULL, \
                     check_scrollbar_content(i->second), \
                     get_scrollbar_scroll(i->second));
             } break ;
@@ -79,7 +77,7 @@ void    draw_gui(std::multimap <gui_type, gui_base *> *gui, game_settings \
             } break ;
             case G_DRAG_DROP:
             {
-                GuiDrawRectangle(i->second->get_bounds(), 1, BLACK, RAYWHITE);
+                GuiDrawRectangle(i->second->bounds, 1, BLACK, RAYWHITE);
 
             } break ;
             case G_PROGRESS_BAR:
@@ -87,7 +85,7 @@ void    draw_gui(std::multimap <gui_type, gui_base *> *gui, game_settings \
                 gui_progress_bar    *bar = dynamic_cast <gui_progress_bar *> (i->second);
 
                 if (bar)
-                    GuiProgressBar(bar->get_bounds(), NULL, NULL, \
+                    GuiProgressBar(bar->bounds, NULL, NULL, \
                         bar->get_value(), bar->get_min(), bar->get_max());
             } break ;
             default: break ;
@@ -104,7 +102,7 @@ gui_base    *find_gui_by_id(std::multimap <gui_type, gui_base*> *gui, \
 
     for (auto i = range.first; i != range.second; ++i)
     {
-        if (i->second->get_id() == id)
+        if (i->second->unique_id == id)
             return (i->second);
     }
     return (NULL);

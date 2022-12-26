@@ -2,7 +2,7 @@
 
 static void input_status_visual(gui_textbox *textbox)
 {
-    Rectangle   bounds = textbox->get_bounds();
+    Rectangle   bounds = textbox->bounds;
 
     DrawRectangleRec(bounds, LIGHTGRAY);
     if (textbox->get_edit_mode())
@@ -11,17 +11,17 @@ static void input_status_visual(gui_textbox *textbox)
     else
         DrawRectangleLines(bounds.x, bounds.y, bounds.width, bounds.height, \
             DARKGRAY);
-    DrawText(textbox->get_text(), bounds.x + 4, bounds.y + 8, 24, BLACK);
+    DrawText(textbox->text, bounds.x + 4, bounds.y + 8, 24, BLACK);
     if (textbox->get_edit_mode())
     {
-        DrawText("_", (int) bounds.x + 8 + MeasureText(textbox->get_text(), \
+        DrawText("_", (int) bounds.x + 8 + MeasureText(textbox->text, \
             24), (int) bounds.y + 8, 24, BLACK);
     }
 }
 
 void    input_status_check(gui_textbox *textbox, Vector2 mousePoint)
 {
-    if (CheckCollisionPointRec(mousePoint, textbox->get_bounds()))
+    if (CheckCollisionPointRec(mousePoint, textbox->bounds))
         textbox->set_edit_mode(true);
     else
         textbox->set_edit_mode(false);

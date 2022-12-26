@@ -54,7 +54,7 @@ void    initialise_settings(std::multimap <gui_type, gui_base *> *gui)
         gui_base    *label = new gui_base;
 
         label->set_text(i, 0, 32, file);
-        label->set_id(i);
+        label->unique_id = i;
         gui->insert(std::pair<gui_type, gui_base *> (G_LABEL, label));
     }
     for (int i = 5; i < 7; i++)
@@ -63,7 +63,7 @@ void    initialise_settings(std::multimap <gui_type, gui_base *> *gui)
 
         if (IsWindowFullscreen() && i - 5 == 0)
             checkbox->set_checked(true);
-        checkbox->set_id(i);
+        checkbox->unique_id = i;
         gui->insert(std::pair<gui_type, gui_base *> (G_CHECKBOX, checkbox));
     }
     for (int i = 7; i < 9; i++)
@@ -72,7 +72,7 @@ void    initialise_settings(std::multimap <gui_type, gui_base *> *gui)
     {
         gui_slider  *slider =  new gui_slider(50, 0, 100);
 
-        slider->set_id(9);
+        slider->unique_id = 9;
         gui->insert(std::pair<gui_type, gui_base *> (G_SLIDER, slider));
     }
     for (int i = 10; i < 12; i++)
@@ -87,7 +87,7 @@ void    initialise_settings(std::multimap <gui_type, gui_base *> *gui)
                 (parse_resolution(dropdown->choice) / 16) * 9);
             dropdown->set_is_resolution(true);
         }
-        dropdown->set_id(i);
+        dropdown->unique_id = i;
         gui->insert(std::pair<gui_type, gui_base *> (G_DROPDOWN, dropdown));
     }
 }

@@ -65,7 +65,7 @@ void    check_dropdowns(std::multimap <gui_type, gui_base *> *gui, \
 
         if (dropdown)
         {
-            if (CheckCollisionPointRec(mouse_point, dropdown->get_bounds()) && \
+            if (CheckCollisionPointRec(mouse_point, dropdown->bounds) && \
                 IsGestureDetected(GESTURE_TAP))
                 dropdown->toggle_edit_mode();
         }
@@ -77,7 +77,7 @@ void    draw_dropdowns(gui_base *gui)
     gui_dropdown    *dropdown = dynamic_cast <gui_dropdown *> (gui);
     int resolution_x = parse_resolution(dropdown->choice);
 
-    GuiDropdownBox(dropdown->get_bounds(), dropdown->get_text(),\
+    GuiDropdownBox(dropdown->bounds, dropdown->text,\
         &(dropdown->choice), dropdown->get_edit_mode());
     if (dropdown->get_is_resolution())
         dropdown->set_default(resolution_x, (resolution_x / 16) * 9);

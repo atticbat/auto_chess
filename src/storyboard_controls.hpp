@@ -1,14 +1,15 @@
 #ifndef STORYBOARD_CONTROLS_HPP
 # define STORYBOARD_CONTROLS_HPP
 
-# include "gui_checkbox.hpp"
-# include "gui_button.hpp"
-# include "gui_slider.hpp"
-# include "gui_scrollbar.hpp"
-# include "gui_dropdown.hpp"
-# include "gui_textbox.hpp"
-# include "gui_drag_drop.hpp"
-# include "gui_dynamic_label.hpp"
+# include "gui/gui_checkbox.hpp"
+# include "gui/gui_button.hpp"
+# include "gui/gui_slider.hpp"
+# include "gui/gui_scrollbar.hpp"
+# include "gui/gui_dropdown.hpp"
+# include "gui/gui_textbox.hpp"
+# include "gui/gui_drag_drop.hpp"
+# include "gui/gui_dynamic_label.hpp"
+# include "gui/gui_progress_bar.hpp"
 
 int         parse_resolution(int id);
 void        input_status_check(gui_textbox *textbox, Vector2 mousePoint);

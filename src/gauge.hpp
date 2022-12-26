@@ -1,7 +1,8 @@
 #ifndef GAUGE_HPP
 # define GAUGE_HPP
 
-# include "gui.hpp"
+# include "gui/gui_base.hpp"
+
 class   gauge
 {
 private:

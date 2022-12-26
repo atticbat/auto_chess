@@ -168,7 +168,7 @@ static void despawn_gui(std::multimap <gui_type, gui_base *> *gui, int index)
     for (std::multimap <gui_type, gui_base *>::iterator i = \
         gui->begin(); i != gui->end(); )
     {
-        if (index == i->second->get_id())
+        if (index == i->second->unique_id)
         {
             delete(i->second);
             i = gui->erase(i);
@@ -236,7 +236,7 @@ static void game_over(Vector2 unit_count, game_settings *settings, \
         gui_base    *label = new gui_base;
         mINI::INIFile       file ("data/simulation_gui.ini");
         label->set_text(0, 0, 128, file);
-        label->set_id(1);
+        label->unique_id = 1;
         gui->insert(std::pair <gui_type, gui_base *> (G_HITBOX, label));
         set_boundaries(gui, 0, 0, file, settings->scale);
         reroll_shop_user(settings->user);
@@ -252,7 +252,7 @@ static void game_over(Vector2 unit_count, game_settings *settings, \
         gui_base    *label = new gui_base;
         mINI::INIFile       file ("data/simulation_gui.ini");
         label->set_text(1, 0, 128, file);
-        label->set_id(1);
+        label->unique_id = 1;
         gui->insert(std::pair <gui_type, gui_base *> (G_HITBOX, label));
         set_boundaries(gui, 0, 0, file, settings->scale);
         reroll_shop_user(settings->user);

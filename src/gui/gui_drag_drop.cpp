@@ -1,4 +1,5 @@
 #include "gui_drag_drop.hpp"
+#include "gui_progress_bar.hpp"
 
 gui_base    *find_gui_by_id(std::multimap <gui_type, gui_base*> *gui, \
     int id, gui_type state);
@@ -17,8 +18,8 @@ static int  check_collision(Vector2 mouse_point, std::multimap <gui_type, \
                 (i->second);
 
             if (drop && CheckCollisionPointRec(mouse_point, \
-                drop->get_bounds()) && id != except && drop->get_display())
-                return (drop->get_id());
+                drop->bounds) && id != except && drop->get_display())
+                return (drop->unique_id);
             id++;
         }
     }
@@ -34,10 +35,10 @@ static void swap_xp_bars(std::multimap <gui_type, gui_base *> *gui, \
     {
         gui_progress_bar    *drag_bar = dynamic_cast \
             <gui_progress_bar *>(find_gui_by_id(gui, \
-            drag->get_id() + 8, G_PROGRESS_BAR));
+            drag->unique_id + 8, G_PROGRESS_BAR));
         gui_progress_bar    *drop_bar = dynamic_cast \
             <gui_progress_bar *>(find_gui_by_id(gui, \
-            drop->get_id() + 8, G_PROGRESS_BAR));
+            drop->unique_id + 8, G_PROGRESS_BAR));
         if (drag_bar && drop_bar)
         {
             swap = drag_bar->get_value();
@@ -46,14 +47,14 @@ static void swap_xp_bars(std::multimap <gui_type, gui_base *> *gui, \
             swap = drag_bar->get_max();
             drag_bar->set_max(drop_bar->get_max());
             drop_bar->set_max(swap);
-            swap = user->get_unit_xp(drag->get_gui_id() - 5);
-            user->set_unit_exp(drag->get_gui_id() - 5, \
-                user->get_unit_xp(drop->get_gui_id() - 5));
-            user->set_unit_exp(drop->get_gui_id() - 5, swap);
-            swap = user->get_unit_max_xp(drag->get_gui_id() - 5);
-            user->set_unit_max_exp(drag->get_gui_id() - 5, \
-                user->get_unit_max_xp(drop->get_gui_id() - 5));
-            user->set_unit_max_exp(drop->get_gui_id() - 5, swap);
+            swap = user->get_unit_xp(drag->gui_id - 5);
+            user->set_unit_exp(drag->gui_id - 5, \
+                user->get_unit_xp(drop->gui_id - 5));
+            user->set_unit_exp(drop->gui_id - 5, swap);
+            swap = user->get_unit_max_xp(drag->gui_id - 5);
+            user->set_unit_max_exp(drag->gui_id - 5, \
+                user->get_unit_max_xp(drop->gui_id - 5));
+            user->set_unit_max_exp(drop->gui_id - 5, swap);
         }
     }
 }
@@ -95,15 +96,15 @@ static void increase_exp(std::multimap <gui_type, gui_base *> *gui, \
     gui_drag_drop *drag, gui_drag_drop *drop, default_run *user)
 {
     gui_progress_bar    *bar = dynamic_cast <gui_progress_bar *> \
-        (find_gui_by_id(gui, drop->get_id() + 8, G_PROGRESS_BAR));
+        (find_gui_by_id(gui, drop->unique_id + 8, G_PROGRESS_BAR));
 
     if (bar)
     {
         bar->increment_value();
         drop->set_unit_id(0);
-        user->add_unit_exp(drop->get_gui_id() - 5);
+        user->add_unit_exp(drop->gui_id - 5);
         drag->set_sprite_id(user->get_roster_slot(\
-            drop->get_gui_id() - 5));
+            drop->gui_id - 5));
     }
 }
 
@@ -135,8 +136,8 @@ static int  handle_drop(std::multimap <gui_type, gui_base *> *gui, \
         drag->set_sprite_id(drop->get_unit_id());
         drop->set_unit_id(swap);
         if (drag->get_display())
-            user->set_unit(drag->get_gui_id() - 5, drag->get_sprite_id());
-        user->set_unit(drop->get_gui_id() - 5, drop->get_unit_id());
+            user->set_unit(drag->gui_id - 5, drag->get_sprite_id());
+        user->set_unit(drop->gui_id - 5, drop->get_unit_id());
     }
     write_changes(user);
     return (drop->get_unit_id());
@@ -173,7 +174,7 @@ static void drag_drop_controls(std::multimap <gui_type, gui_base *> *gui, \
 {
     mINI::INIFile file ("data/draft_gui.ini");
     //picked up
-    if (drag && CheckCollisionPointRec(mouse_point, drag->get_bounds()) && \
+    if (drag && CheckCollisionPointRec(mouse_point, drag->bounds) && \
         IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && drag->get_unit_id())
     {
         drag->remove_sprite();
@@ -184,7 +185,7 @@ static void drag_drop_controls(std::multimap <gui_type, gui_base *> *gui, \
     if (drag && IsMouseButtonReleased(MOUSE_LEFT_BUTTON) && \
         drag->get_is_picked_up())
     {
-        int overlapped = check_collision(mouse_point, gui, drag->get_gui_id());
+        int overlapped = check_collision(mouse_point, gui, drag->gui_id);
 
         if (!(check_afford(drag->get_sprite_id(), user->get_gold())) && \
             !(drag->get_display()))
@@ -195,19 +196,19 @@ static void drag_drop_controls(std::multimap <gui_type, gui_base *> *gui, \
             {
                 user->deduct_gold(check_price(handle_drop(gui, drag, \
                     overlapped, user)));
-                user->set_store(drag->get_gui_id(), drag->get_unit_id());
+                user->set_store(drag->gui_id, drag->get_unit_id());
             }
             else
                 handle_drop(gui, drag, overlapped, user);
         }
         //sold
         if (drag->get_display() && CheckCollisionPointRec(mouse_point, \
-            find_gui_by_id(gui, 9, G_HITBOX)->get_bounds()))
+            find_gui_by_id(gui, 9, G_HITBOX)->bounds))
         {
             user->add_gold(check_price(drag->get_sprite_id()));
-            user->set_unit(drag->get_gui_id() - 5, 0);
-            user->set_unit_exp(drag->get_gui_id() - 5, 0);
-            user->set_unit_max_exp(drag->get_gui_id() - 5, 2);
+            user->set_unit(drag->gui_id - 5, 0);
+            user->set_unit_exp(drag->gui_id - 5, 0);
+            user->set_unit_max_exp(drag->gui_id - 5, 2);
             drag->set_sprite_id(0);
         }
         drag->set_is_picked_up(false);

@@ -1,7 +1,7 @@
 #ifndef UNIT_STATS_HPP
 # define UNIT_STATS_HPP
 
-# include "gui.hpp"
+# include "gui/gui_base.hpp"
 // # include "gauge.hpp"
 
 class unit_stats

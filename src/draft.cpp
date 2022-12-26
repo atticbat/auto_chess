@@ -12,21 +12,21 @@ void    update_dlabels(std::multimap <gui_type, gui_base *> *gui, \
         
         if (!label)
             continue ;
-        if (label->get_id() == 0)
+        if (label->unique_id == 0)
             label->update_text(user->get_gold(), false); 
-        else if (label->get_id() == 1)
+        else if (label->unique_id == 1)
             label->update_text(user->get_level(), false);
-        else if (label->get_id() == 2)
+        else if (label->unique_id == 2)
             label->update_text((int) 100 * user->get_t1_odds(), true);
-        else if (label->get_id() == 3)
+        else if (label->unique_id == 3)
             label->update_text((int) 100 * user->get_t2_odds(), true);
-        else if (label->get_id() == 4)
+        else if (label->unique_id == 4)
             label->update_text((int) 100 * user->get_t3_odds(), true);
-        else if (label->get_id() == 5)
+        else if (label->unique_id == 5)
             label->update_text((int) 100 * user->get_t4_odds(), true);
-        else if (label->get_id() == 6)
+        else if (label->unique_id == 6)
             label->update_text(user->get_wins(), false);
-        else if (label->get_id() == 7)
+        else if (label->unique_id == 7)
             label->update_text(user->get_losses(), false); 
     }
 }
@@ -54,7 +54,7 @@ static gui_dynamic_label    *generate_dlabel(default_run *user, int i)
         label->update_text(user->get_wins(), false);
     else if (i == 7)
         label->update_text(user->get_losses(), false);
-    label->set_id(i);
+    label->unique_id = i;
     return (label);
 }
 
@@ -77,7 +77,7 @@ void    initialise_draft (std::multimap <gui_type, gui_base *> *gui, \
 
         drag_drop->set_unit_id(user->get_store_slot(i - 15));
         drag_drop->set_text(i - 15, 8, 24, file);
-        drag_drop->set_id(i);
+        drag_drop->unique_id = i;
         gui->insert(std::pair<gui_type, gui_drag_drop *> (G_DRAG_DROP, drag_drop));
     }
     for (int i = 20; i < 28; i++)
@@ -86,7 +86,7 @@ void    initialise_draft (std::multimap <gui_type, gui_base *> *gui, \
 
         drag_drop->set_unit_id(user->get_roster_slot(i - 20));
         drag_drop->set_text(i - 15, 8, 24, file);
-        drag_drop->set_id(i);
+        drag_drop->unique_id = i;
         if (drag_drop->get_unit_id())
             drag_drop->generate_static_sprite (drag_drop->get_unit_id(), 2, file);
         drag_drop->set_display(true);
@@ -101,7 +101,7 @@ void    initialise_draft (std::multimap <gui_type, gui_base *> *gui, \
         else
             bar = new gui_progress_bar(user->get_exp(), 0, user->get_exp_cap());
         bar->set_text(i - 28, 9, 16, file);
-        bar->set_id(i);
+        bar->unique_id = i;
         gui->insert(std::pair<gui_type, gui_base *> (G_PROGRESS_BAR, bar));
     }
     write_changes(user);
@@ -126,7 +126,7 @@ void    reroll_shop(std::multimap <gui_type, gui_base *> *gui, default_run \
                 if (drag_drop && !(drag_drop->get_display()))
                 {
                     drag_drop->set_unit_id(available_units[rand() % 5]);
-                    user->set_store(drag_drop->get_gui_id(), \
+                    user->set_store(drag_drop->gui_id, \
                         drag_drop->get_unit_id());
                 }
             }

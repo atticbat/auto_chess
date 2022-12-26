@@ -1,6 +1,6 @@
 #ifndef PARTICLES_HPP
 # define PARTICLES_HPP
-# include "gui.hpp"
+# include "gui/gui_base.hpp"
 # include <math.h>
 
 typedef enum particle_type { P_BASE = 0, P_DAMAGE, P_PROJECTILE } \

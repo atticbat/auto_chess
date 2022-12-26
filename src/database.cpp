@@ -59,7 +59,7 @@ void    initialise_database(std::multimap <gui_type, gui_base *> *gui)
         gui_base    *label = new gui_base;
 
         label->set_text(i, 0, 20, file);;
-        label->set_id(i);
+        label->unique_id = i;
         gui->insert(std::pair<gui_type, gui_base *> (G_LABEL, label));
     }
 
@@ -68,13 +68,13 @@ void    initialise_database(std::multimap <gui_type, gui_base *> *gui)
         gui_button    *button = new gui_button;
 
         button->set_text(i - 13, 3, 24, file);
-        button->set_id(i);
+        button->unique_id = i;
         button->set_destination(parse_destination(i - 13, file));
         gui->insert(std::pair<gui_type, gui_base *> (G_BUTTON, button));
     }
     {
         gui_scrollbar   *scrollbar =  new gui_scrollbar;
-        scrollbar->set_id(15);
+        scrollbar->unique_id = 15;
         gui->insert(std::pair<gui_type, gui_base *> (G_SCROLLBAR, scrollbar));
     }
     for (int i = 16; i < 29; i++)
@@ -82,7 +82,7 @@ void    initialise_database(std::multimap <gui_type, gui_base *> *gui)
         gui_textbox *textbox = new gui_textbox;
         
         textbox->set_text(i - 16, 24);;
-        textbox->set_id(i);
+        textbox->unique_id = i;
         gui->insert(std::pair<gui_type, gui_base *> (G_TEXTBOX, textbox));
     }
 }
@@ -98,7 +98,7 @@ static bool check_not_empty(std::multimap <gui_type, gui_base*> *gui)
 
             if (textbox)
             {
-                if (textbox->get_text()[0] == '\0')
+                if (textbox->text[0] == '\0')
                     return (0);
             }
         }
@@ -117,7 +117,7 @@ static void write_unit_db(std::multimap <gui_type, gui_base*> *gui, \
         gui_textbox  *textbox = dynamic_cast <gui_textbox *> \
             (find_gui_by_id(gui, 16, G_TEXTBOX));
         if (textbox)
-            id = atoi(textbox->get_text());
+            id = atoi(textbox->text);
     }
     read_txt = fopen("arrays/unit_database.txt", "w+");
     i = 0;
@@ -130,7 +130,7 @@ static void write_unit_db(std::multimap <gui_type, gui_base*> *gui, \
     while (j < DATABASE_INPUTS)
     {
         fprintf(read_txt, "%s", find_gui_by_id(gui, 16 + j, \
-            G_TEXTBOX)->get_text());
+            G_TEXTBOX)->text);
         if (j < 12)
             fprintf(read_txt, "%s", ",");
         j++;

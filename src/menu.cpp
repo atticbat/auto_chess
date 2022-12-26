@@ -1,4 +1,5 @@
 #include "menu.hpp"
+#include "gui/gui_button.hpp"
 
 void    initialise_menu(std::multimap <gui_type, gui_base *> *gui)
 {
