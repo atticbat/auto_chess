@@ -1,6 +1,57 @@
 #include "gui_drag_drop.hpp"
 #include "gui_progress_bar.hpp"
 
+void	gui_drag_drop::generate_picked_up_sprite (int id, int frames, \
+	mINI::INIFile file)
+{
+    sprite = new sprite_picked_up(unit_id, frames, 0, file);
+    unit_id = 0;
+}
+
+void	gui_drag_drop::generate_static_sprite (int id, int frames, mINI::INIFile file)
+{
+    sprite = new sprite_base(id, frames, 1, file);
+}
+
+void	gui_drag_drop::remove_sprite(void)
+{
+    if (sprite)
+    {
+        delete (sprite);
+        sprite = NULL;
+    }
+}
+
+void	gui_drag_drop::draw_sprite(Vector2 point, float scale, bool drag)
+{
+    if (drag)
+    {
+        sprite_picked_up    *picked_up = static_cast <sprite_picked_up *> (sprite);
+
+        if (picked_up)
+            DrawTexturePro(picked_up->get_image(), picked_up->get_source(), \
+                picked_up->get_boundaries(point, scale), \
+                picked_up->get_offset_location(scale), 0, RAYWHITE);
+    }
+    else
+        DrawTexturePro(sprite->get_image(), sprite->get_source(), \
+            sprite->get_boundaries(bounds, scale), \
+            sprite->get_offset_location(bounds, scale), 0, RAYWHITE);
+}
+
+int	gui_drag_drop::get_sprite_id(void)
+{
+    if (sprite)
+        return (sprite->get_unit_id());
+    return (0);
+}
+
+void	gui_drag_drop::increment_state(void)
+{
+    if (sprite)
+        sprite->increment_state();
+}
+
 gui_base    *find_gui_by_id(std::multimap <gui_type, gui_base*> *gui, \
     int id, gui_type state);
 
@@ -18,7 +69,7 @@ static int  check_collision(Vector2 mouse_point, std::multimap <gui_type, \
                 (i->second);
 
             if (drop && CheckCollisionPointRec(mouse_point, \
-                drop->bounds) && id != except && drop->get_display())
+                drop->bounds) && id != except && drop->display)
                 return (drop->unique_id);
             id++;
         }
@@ -31,7 +82,7 @@ static void swap_xp_bars(std::multimap <gui_type, gui_base *> *gui, \
 {
     int swap = 0;
 
-    if (drop && drop->get_display())
+    if (drop && drop->display)
     {
         gui_progress_bar    *drag_bar = dynamic_cast \
             <gui_progress_bar *>(find_gui_by_id(gui, \
@@ -41,12 +92,12 @@ static void swap_xp_bars(std::multimap <gui_type, gui_base *> *gui, \
             drop->unique_id + 8, G_PROGRESS_BAR));
         if (drag_bar && drop_bar)
         {
-            swap = drag_bar->get_value();
-            drag_bar->set_value(drop_bar->get_value());
-            drop_bar->set_value(swap);
-            swap = drag_bar->get_max();
-            drag_bar->set_max(drop_bar->get_max());
-            drop_bar->set_max(swap);
+            swap = drag_bar->value;
+            drag_bar->value = drop_bar->value;
+            drop_bar->value = swap;
+            swap = drag_bar->max;
+            drag_bar->max = drop_bar->max;
+            drop_bar->max = swap;
             swap = user->get_unit_xp(drag->gui_id - 5);
             user->set_unit_exp(drag->gui_id - 5, \
                 user->get_unit_xp(drop->gui_id - 5));
@@ -101,10 +152,9 @@ static void increase_exp(std::multimap <gui_type, gui_base *> *gui, \
     if (bar)
     {
         bar->increment_value();
-        drop->set_unit_id(0);
+        drop->unit_id = 0;
         user->add_unit_exp(drop->gui_id - 5);
-        drag->set_sprite_id(user->get_roster_slot(\
-            drop->gui_id - 5));
+        drag->sprite->set_unit_id(user->get_roster_slot(drop->gui_id - 5));
     }
 }
 
@@ -118,29 +168,29 @@ static int  handle_drop(std::multimap <gui_type, gui_base *> *gui, \
 
     if (drop)
     {
-        if (drop->get_unit_id())
+        if (drop->unit_id)
         {
-            if (!(check_same_unit(drag->get_sprite_id(), drop->get_unit_id())))
+            if (!(check_same_unit(drag->get_sprite_id(), drop->unit_id)))
                 swap_xp_bars(gui, drag, drop, user);
-            if (check_same_unit(drag->get_sprite_id(), drop->get_unit_id()))
+            if (check_same_unit(drag->get_sprite_id(), drop->unit_id))
                 increase_exp(gui, drag, drop, user);
-            else if (!(drag->get_display()))
+            else if (!(drag->display))
                 return (0);
         }
         else
             swap_xp_bars(gui, drag, drop, user);
         drop->remove_sprite();
-        if (drop->get_display())
+        if (drop->display)
             drop->generate_static_sprite(drag->get_sprite_id(), 2, file);
         swap = drag->get_sprite_id();
-        drag->set_sprite_id(drop->get_unit_id());
-        drop->set_unit_id(swap);
-        if (drag->get_display())
+        drag->sprite->set_unit_id(drop->unit_id);
+        drop->unit_id = swap;
+        if (drag->display)
             user->set_unit(drag->gui_id - 5, drag->get_sprite_id());
-        user->set_unit(drop->gui_id - 5, drop->get_unit_id());
+        user->set_unit(drop->gui_id - 5, drop->unit_id);
     }
     write_changes(user);
-    return (drop->get_unit_id());
+    return (drop->unit_id);
 }
 
 static int  check_price(int unit_id)
@@ -175,47 +225,46 @@ static void drag_drop_controls(std::multimap <gui_type, gui_base *> *gui, \
     mINI::INIFile file ("data/draft_gui.ini");
     //picked up
     if (drag && CheckCollisionPointRec(mouse_point, drag->bounds) && \
-        IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && drag->get_unit_id())
+        IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && drag->unit_id)
     {
         drag->remove_sprite();
         drag->generate_picked_up_sprite(drag->get_sprite_id(), 2, file);
-        drag->set_is_picked_up(true);
+        drag->is_picked = true;
     }
     //dropped
-    if (drag && IsMouseButtonReleased(MOUSE_LEFT_BUTTON) && \
-        drag->get_is_picked_up())
+    if (drag && IsMouseButtonReleased(MOUSE_LEFT_BUTTON) && drag->is_picked)
     {
         int overlapped = check_collision(mouse_point, gui, drag->gui_id);
 
         if (!(check_afford(drag->get_sprite_id(), user->get_gold())) && \
-            !(drag->get_display()))
+            !(drag->display))
             overlapped = -1;
         if (overlapped > -1)
         {
-            if (!(drag->get_display()))
+            if (!(drag->display))
             {
                 user->deduct_gold(check_price(handle_drop(gui, drag, \
                     overlapped, user)));
-                user->set_store(drag->gui_id, drag->get_unit_id());
+                user->set_store(drag->gui_id, drag->unit_id);
             }
             else
                 handle_drop(gui, drag, overlapped, user);
         }
         //sold
-        if (drag->get_display() && CheckCollisionPointRec(mouse_point, \
+        if (drag->display && CheckCollisionPointRec(mouse_point, \
             find_gui_by_id(gui, 9, G_HITBOX)->bounds))
         {
             user->add_gold(check_price(drag->get_sprite_id()));
             user->set_unit(drag->gui_id - 5, 0);
             user->set_unit_exp(drag->gui_id - 5, 0);
             user->set_unit_max_exp(drag->gui_id - 5, 2);
-            drag->set_sprite_id(0);
+            drag->sprite->set_unit_id(0);
         }
-        drag->set_is_picked_up(false);
-        drag->set_unit_id(drag->get_sprite_id());
+        drag->is_picked = false;
+        drag->unit_id= drag->get_sprite_id();
         drag->remove_sprite();
-        if (drag->get_display() && drag->get_unit_id())
-            drag->generate_static_sprite(drag->get_unit_id(), 2, file);
+        if (drag->display && drag->unit_id)
+            drag->generate_static_sprite(drag->unit_id, 2, file);
     }
 }
 
@@ -236,10 +285,10 @@ void    draw_drag_drops(gui_base *gui, game_settings settings)
 {
     gui_drag_drop   *drag_drop = dynamic_cast <gui_drag_drop *> (gui);
 
-    if (drag_drop && drag_drop->get_is_picked_up())
+    if (drag_drop && drag_drop->is_picked)
         drag_drop->draw_sprite(settings.mouse_point, settings.sprite_size, \
         true);
-    else if (drag_drop && drag_drop->get_display() && \
+    else if (drag_drop && drag_drop->display && \
         drag_drop->get_sprite_id())
         drag_drop->draw_sprite((Vector2) { 0, 0 }, settings.sprite_size, \
         false);
@@ -256,7 +305,7 @@ void    check_drag_drops(std::multimap <gui_type, gui_base *> *gui, \
     {
         gui_drag_drop   *drag = dynamic_cast <gui_drag_drop *> (i->second);
 
-        if (drag && (drag->get_unit_id() || drag->get_sprite_id()))
+        if (drag && (drag->unit_id || drag->get_sprite_id()))
             drag_drop_controls(gui, drag, mouse_point, user);
         if (drag && timer % 20 == 0)
         {

@@ -6,7 +6,7 @@ void    set_scrollbar_content(gui_base *gui, float x_off, float y_off, \
     gui_scrollbar   *scrollbar = dynamic_cast<gui_scrollbar *> (gui);
 
     if (scrollbar)
-        scrollbar->set_content(x_off, y_off, width, height);
+        scrollbar->content = Rectangle{ x_off, y_off, width, height };
 }
 
 void    set_scrollbar_bounds(gui_base *gui, float off_x, float off_y, \
@@ -15,7 +15,7 @@ void    set_scrollbar_bounds(gui_base *gui, float off_x, float off_y, \
     gui_scrollbar   *scrollbar = dynamic_cast<gui_scrollbar *> (gui);
 
     if (scrollbar)
-        scrollbar->set_bounds(off_x, off_y, width, height);
+        scrollbar->bounds = Rectangle{ off_x, off_y, width, height };
 }
 
 Rectangle   check_scrollbar_content(gui_base *gui)
@@ -23,7 +23,7 @@ Rectangle   check_scrollbar_content(gui_base *gui)
     gui_scrollbar   *scrollbar = dynamic_cast <gui_scrollbar *> (gui);
 
     if (scrollbar)
-        return (scrollbar->get_content());
+        return (scrollbar->content);
     return ((Rectangle) {0, 0, 0, 0});
 }
 

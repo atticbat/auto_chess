@@ -1,11 +1,21 @@
 #include "gui_button.hpp"
 
+bool	gui_button::get_checked(void)
+{
+    if (checked)
+    {
+        checked = false;
+        return (true);
+    }
+    return (checked);
+}
+
 void    set_button(gui_base *gui, bool pressed)
 {
     gui_button *button = dynamic_cast<gui_button *> (gui);
 
     if (button)
-        button->set_checked(pressed);
+        button->checked = pressed;
 }
 
 gui_button  *generate_button(int i, mINI::INIFile file)
@@ -13,7 +23,7 @@ gui_button  *generate_button(int i, mINI::INIFile file)
     gui_button  *button = new gui_button;
 
     button->set_text(i, 3, 24, file);
-    button->set_destination(parse_destination(i, file));
+    button->destination = parse_destination(i, file);
     button->unique_id = i;
     return (button);
 }
@@ -23,7 +33,7 @@ game_state  check_button_destination(gui_base *gui)
     gui_button *button = dynamic_cast<gui_button *> (gui);
 
     if (button)
-        return (button->get_destination());
+        return (button->destination);
     return (MENU);
 }
 
@@ -36,7 +46,7 @@ game_state  check_buttons(std::multimap <gui_type, gui_base *> *gui, \
         gui_button  *button = dynamic_cast<gui_button *> (i->second);
 
         if (button && button->get_checked())
-            return (button->get_destination());
+            return (button->destination);
     }
     return (current_state);
 }

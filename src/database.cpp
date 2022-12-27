@@ -69,7 +69,7 @@ void    initialise_database(std::multimap <gui_type, gui_base *> *gui)
 
         button->set_text(i - 13, 3, 24, file);
         button->unique_id = i;
-        button->set_destination(parse_destination(i - 13, file));
+        button->destination = parse_destination(i - 13, file);
         gui->insert(std::pair<gui_type, gui_base *> (G_BUTTON, button));
     }
     {

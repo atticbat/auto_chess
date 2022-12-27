@@ -2,6 +2,14 @@
 
 int parse_resolution(int id);
 
+void    gui_dropdown::set_default(int width, int height)
+{
+    default_x = width;
+    default_y = height;
+}
+
+void    gui_dropdown::toggle_edit_mode(void) { edit_mode = !edit_mode; }
+
 int     *get_dropdown_choice_ptr(gui_base *gui)
 {
     gui_dropdown    *dropdown = dynamic_cast<gui_dropdown *> (gui);
@@ -16,7 +24,7 @@ int check_default_x(gui_base *gui)
     gui_dropdown *dropdown = dynamic_cast<gui_dropdown *> (gui);
 
     if (dropdown)
-        return (dropdown->get_default_x());
+        return (dropdown->default_x);
     return (1920);
 }
 
@@ -25,7 +33,7 @@ int check_default_y(gui_base *gui)
     gui_dropdown *dropdown = dynamic_cast<gui_dropdown *> (gui);
 
     if (dropdown)
-        return (dropdown->get_default_y());
+        return (dropdown->default_y);
     return (1080);
 }
 
@@ -43,7 +51,7 @@ bool    check_dropdown_edit_mode(gui_base *gui)
     gui_dropdown    *dropdown = dynamic_cast<gui_dropdown *> (gui);
 
     if(dropdown)
-        return (dropdown->get_edit_mode());
+        return (dropdown->edit_mode);
     return (false);
 }
 
@@ -78,7 +86,7 @@ void    draw_dropdowns(gui_base *gui)
     int resolution_x = parse_resolution(dropdown->choice);
 
     GuiDropdownBox(dropdown->bounds, dropdown->text,\
-        &(dropdown->choice), dropdown->get_edit_mode());
-    if (dropdown->get_is_resolution())
+        &(dropdown->choice), dropdown->edit_mode);
+    if (dropdown->is_resolution)
         dropdown->set_default(resolution_x, (resolution_x / 16) * 9);
 }

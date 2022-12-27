@@ -86,7 +86,7 @@ void    draw_gui(std::multimap <gui_type, gui_base *> *gui, game_settings \
 
                 if (bar)
                     GuiProgressBar(bar->bounds, NULL, NULL, \
-                        bar->get_value(), bar->get_min(), bar->get_max());
+                        bar->value, bar->min, bar->max);
             } break ;
             default: break ;
         }

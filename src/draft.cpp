@@ -75,7 +75,7 @@ void    initialise_draft (std::multimap <gui_type, gui_base *> *gui, \
     {
         gui_drag_drop   *drag_drop = new gui_drag_drop;
 
-        drag_drop->set_unit_id(user->get_store_slot(i - 15));
+        drag_drop->unit_id = user->get_store_slot(i - 15);
         drag_drop->set_text(i - 15, 8, 24, file);
         drag_drop->unique_id = i;
         gui->insert(std::pair<gui_type, gui_drag_drop *> (G_DRAG_DROP, drag_drop));
@@ -84,12 +84,12 @@ void    initialise_draft (std::multimap <gui_type, gui_base *> *gui, \
     {
         gui_drag_drop   *drag_drop = new gui_drag_drop;
 
-        drag_drop->set_unit_id(user->get_roster_slot(i - 20));
+        drag_drop->unit_id = user->get_roster_slot(i - 20);
         drag_drop->set_text(i - 15, 8, 24, file);
         drag_drop->unique_id = i;
-        if (drag_drop->get_unit_id())
-            drag_drop->generate_static_sprite (drag_drop->get_unit_id(), 2, file);
-        drag_drop->set_display(true);
+        if (drag_drop->unit_id)
+            drag_drop->generate_static_sprite (drag_drop->unit_id, 2, file);
+        drag_drop->display = true;
         gui->insert(std::pair<gui_type, gui_drag_drop *> (G_DRAG_DROP, drag_drop));
     }
     for (int i = 28; i < 37; i++)
@@ -123,11 +123,11 @@ void    reroll_shop(std::multimap <gui_type, gui_base *> *gui, default_run \
                 gui_drag_drop   *drag_drop = dynamic_cast <gui_drag_drop *> \
                     (i->second);
 
-                if (drag_drop && !(drag_drop->get_display()))
+                if (drag_drop && !(drag_drop->display))
                 {
-                    drag_drop->set_unit_id(available_units[rand() % 5]);
+                    drag_drop->unit_id = available_units[rand() % 5];
                     user->set_store(drag_drop->gui_id, \
-                        drag_drop->get_unit_id());
+                        drag_drop->unit_id);
                 }
             }
         }
@@ -155,8 +155,8 @@ void    buy_xp(std::multimap <gui_type, gui_base *> *gui, default_run *user)
         user->add_exp(2);
         if (bar)
         {
-            bar->set_value(user->get_exp());
-            bar->set_max(user->get_exp_cap());
+            bar->value = user->get_exp();
+            bar->max = user->get_exp_cap();
         }
         update_dlabels(gui, user);
         write_changes(user);

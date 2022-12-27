@@ -5,20 +5,9 @@
 
 class gui_button : public gui_checkbox
 {
-private:
-    game_state  destination = MENU;
 public:
-    game_state  get_destination(void) { return (destination); }
-    void        set_destination(game_state to) { destination = to; }
-    bool        get_checked(void)
-    {
-        if (checked)
-        {
-            checked = false;
-            return (true);
-        }
-        return (checked);
-    }
+    game_state  destination = MENU;
+    bool        get_checked(void);
 };
 
 // bool        check_button_press(gui_base *gui);

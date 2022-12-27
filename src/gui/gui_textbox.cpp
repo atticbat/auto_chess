@@ -1,18 +1,52 @@
 #include "gui_textbox.hpp"
 
+void    gui_textbox::set_text(int id, int size)
+{
+    gui_id = id;
+    text_size = size;
+    max_input = db_max_input[id];
+    text = (char *) malloc (sizeof(char) * (max_input + 1));
+}
+
+bool    gui_textbox::check_if_max(void)
+{
+    if (input_count == max_input)
+        return (true);
+    return (false);
+}
+
+void    gui_textbox::add_letter(char letter)
+{
+    if (!check_if_max())
+    {
+        text[input_count] = letter;
+        input_count++;
+        text[input_count] = '\0';
+    }
+}
+
+void    gui_textbox::delete_letter(void)
+{
+    if (input_count > 0)
+    {
+        input_count--;
+        text[input_count] = '\0';
+    }
+}
+
 static void input_status_visual(gui_textbox *textbox)
 {
     Rectangle   bounds = textbox->bounds;
 
     DrawRectangleRec(bounds, LIGHTGRAY);
-    if (textbox->get_edit_mode())
+    if (textbox->edit_mode)
         DrawRectangleLines(bounds.x, bounds.y, bounds.width, bounds.height, \
             BLACK);
     else
         DrawRectangleLines(bounds.x, bounds.y, bounds.width, bounds.height, \
             DARKGRAY);
     DrawText(textbox->text, bounds.x + 4, bounds.y + 8, 24, BLACK);
-    if (textbox->get_edit_mode())
+    if (textbox->edit_mode)
     {
         DrawText("_", (int) bounds.x + 8 + MeasureText(textbox->text, \
             24), (int) bounds.y + 8, 24, BLACK);
@@ -22,10 +56,10 @@ static void input_status_visual(gui_textbox *textbox)
 void    input_status_check(gui_textbox *textbox, Vector2 mousePoint)
 {
     if (CheckCollisionPointRec(mousePoint, textbox->bounds))
-        textbox->set_edit_mode(true);
+        textbox->edit_mode = true;
     else
-        textbox->set_edit_mode(false);
-    if (textbox->get_edit_mode())
+        textbox->edit_mode = false;
+    if (textbox->edit_mode)
     {
         SetMouseCursor(MOUSE_CURSOR_IBEAM);
         int key = GetCharPressed();
@@ -51,7 +85,7 @@ void    check_textboxes(std::multimap <gui_type, gui_base *> *gui, \
         gui_textbox *textbox = dynamic_cast<gui_textbox *> (i->second);
 
         input_status_check(textbox, mouse_point);
-        if (textbox->get_edit_mode())
+        if (textbox->edit_mode)
             no_hover = false;
     }
     if  (no_hover)

@@ -5,11 +5,8 @@
 
 class gui_checkbox : public gui_base
 {
-protected:
-    bool    checked = false;
 public:
-    virtual void    set_checked(bool _checked) { checked = _checked; }
-    bool            get_checked(void) { return (checked); }
+    bool    		checked = false;
 };
 
 bool        check_checkbox(gui_base *gui);

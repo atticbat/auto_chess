@@ -6,18 +6,9 @@
 class gui_scrollbar : public gui_base
 {
 private:
-    Rectangle   content;
 public:
+    Rectangle   content;
     Vector2     scroll = { 99, -20 };
-    void        set_bounds(float x, float y, float width, float height)
-    {
-        bounds = (Rectangle) { x, y, width, height };
-    }
-    void        set_content(float x, float y, float width, float height)
-    {
-        content = (Rectangle) { x, y, width, height };
-    }
-    Rectangle   get_content(void) { return (content); }
 };
 
 void        set_scrollbar_content(gui_base *gui, float x_off, float y_off, \

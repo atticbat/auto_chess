@@ -62,7 +62,7 @@ void    initialise_settings(std::multimap <gui_type, gui_base *> *gui)
         gui_checkbox    *checkbox = new gui_checkbox;
 
         if (IsWindowFullscreen() && i - 5 == 0)
-            checkbox->set_checked(true);
+            checkbox->checked = true;
         checkbox->unique_id = i;
         gui->insert(std::pair<gui_type, gui_base *> (G_CHECKBOX, checkbox));
     }
@@ -85,7 +85,7 @@ void    initialise_settings(std::multimap <gui_type, gui_base *> *gui)
         {
             dropdown->set_default(parse_resolution(dropdown->choice), \
                 (parse_resolution(dropdown->choice) / 16) * 9);
-            dropdown->set_is_resolution(true);
+            dropdown->is_resolution = true;
         }
         dropdown->unique_id = i;
         gui->insert(std::pair<gui_type, gui_base *> (G_DROPDOWN, dropdown));

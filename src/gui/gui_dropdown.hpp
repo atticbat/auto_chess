@@ -5,24 +5,14 @@
 
 class gui_dropdown : public gui_base
 {
-private:
+public:
     bool    edit_mode = false;
     bool    is_resolution = false;
     int     default_x = 0;
     int     default_y = 0;
-public:
     int     choice = 3;
-    int     get_default_x(void) { return (default_x); }
-    int     get_default_y(void) { return (default_y); }
-    void    set_default(int width, int height)
-    {
-        default_x = width;
-        default_y = height;
-    }
-    bool    get_edit_mode(void) { return (edit_mode); }
-    bool    get_is_resolution(void) { return (is_resolution); }
-    void    toggle_edit_mode(void) { edit_mode = !edit_mode; }
-    void    set_is_resolution(bool is_res) { is_resolution = is_res; }
+    void    set_default(int width, int height);
+    void    toggle_edit_mode(void);
 };
 
 int         check_dropdown_choice(gui_base *gui);
