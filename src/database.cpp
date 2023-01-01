@@ -117,7 +117,7 @@ static void write_unit_db(std::multimap <gui_type, gui_base*> *gui, \
         gui_textbox  *textbox = dynamic_cast <gui_textbox *> \
             (find_gui_by_id(gui, 16, G_TEXTBOX));
         if (textbox)
-            id = atoi(textbox->text);
+            id = stoi(textbox->text);
     }
     read_txt = fopen("arrays/unit_database.txt", "w+");
     i = 0;

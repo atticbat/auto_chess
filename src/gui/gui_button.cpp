@@ -1,5 +1,10 @@
 #include "gui_button.hpp"
 
+gui_button::gui_button() : gui_checkbox()
+{
+	destination = MENU;
+}
+
 bool	gui_button::get_checked(void)
 {
     if (checked)

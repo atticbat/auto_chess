@@ -2,6 +2,15 @@
 
 int parse_resolution(int id);
 
+gui_dropdown::gui_dropdown()
+{
+	edit_mode = false;
+	is_resolution = false;
+	default_x = 0;
+	default_y = 0;
+	choice = 3;
+}
+
 void    gui_dropdown::set_default(int width, int height)
 {
     default_x = width;
@@ -85,7 +94,7 @@ void    draw_dropdowns(gui_base *gui)
     gui_dropdown    *dropdown = dynamic_cast <gui_dropdown *> (gui);
     int resolution_x = parse_resolution(dropdown->choice);
 
-    GuiDropdownBox(dropdown->bounds, dropdown->text,\
+    GuiDropdownBox(dropdown->bounds, dropdown->text.c_str(),\
         &(dropdown->choice), dropdown->edit_mode);
     if (dropdown->is_resolution)
         dropdown->set_default(resolution_x, (resolution_x / 16) * 9);

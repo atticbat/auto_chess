@@ -6,11 +6,12 @@
 class gui_dropdown : public gui_base
 {
 public:
-    bool    edit_mode = false;
-    bool    is_resolution = false;
-    int     default_x = 0;
-    int     default_y = 0;
-    int     choice = 3;
+    bool    edit_mode;
+    bool    is_resolution;
+    int     default_x;
+    int     default_y;
+    int     choice;
+	gui_dropdown();
     void    set_default(int width, int height);
     void    toggle_edit_mode(void);
 };

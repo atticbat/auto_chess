@@ -6,7 +6,8 @@
 class gui_checkbox : public gui_base
 {
 public:
-    bool    		checked = false;
+    bool	checked;
+	gui_checkbox();
 };
 
 bool        check_checkbox(gui_base *gui);

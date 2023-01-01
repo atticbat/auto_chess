@@ -6,10 +6,11 @@
 class gui_drag_drop : public gui_base
 {
 public:
-    bool        is_picked = false;
-    bool        display = false;
-    int         unit_id = 0;
-    sprite_base *sprite = NULL;
+    bool        is_picked;
+    bool        display;
+    int         unit_id;
+    sprite_base *sprite;
+	gui_drag_drop();
     void        generate_picked_up_sprite (int id, int frames, mINI::INIFile \
         file);
     void        generate_static_sprite (int id, int frames, mINI::INIFile file);

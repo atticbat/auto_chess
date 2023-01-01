@@ -1,11 +1,17 @@
 #include "gui_textbox.hpp"
 
+gui_textbox::gui_textbox()
+{
+	max_input = 5;
+	edit_mode = false;
+	input_count = 0;
+}
+
 void    gui_textbox::set_text(int id, int size)
 {
     gui_id = id;
     text_size = size;
     max_input = db_max_input[id];
-    text = (char *) malloc (sizeof(char) * (max_input + 1));
 }
 
 bool    gui_textbox::check_if_max(void)
@@ -45,10 +51,10 @@ static void input_status_visual(gui_textbox *textbox)
     else
         DrawRectangleLines(bounds.x, bounds.y, bounds.width, bounds.height, \
             DARKGRAY);
-    DrawText(textbox->text, bounds.x + 4, bounds.y + 8, 24, BLACK);
+    DrawText(textbox->text.c_str(), bounds.x + 4, bounds.y + 8, 24, BLACK);
     if (textbox->edit_mode)
     {
-        DrawText("_", (int) bounds.x + 8 + MeasureText(textbox->text, \
+        DrawText("_", (int) bounds.x + 8 + MeasureText(textbox->text.c_str(), \
             24), (int) bounds.y + 8, 24, BLACK);
     }
 }

@@ -1,5 +1,11 @@
 #include "gui_scrollbar.hpp"
 
+gui_scrollbar::gui_scrollbar()
+{
+    scroll.x = 99;
+	scroll.y = -20;
+}
+
 void    set_scrollbar_content(gui_base *gui, float x_off, float y_off, \
     float width, float height)
 {

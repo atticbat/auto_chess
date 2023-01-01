@@ -6,7 +6,7 @@
 class gui_progress_bar : public gui_slider
 {
 public:
-    char    *text_right = NULL;
+    std::string	text_right;
     gui_progress_bar(int _value, int _min, int _max);
     ~gui_progress_bar();
     void    set_text_right(int id, int mode, int size, mINI::INIFile file);

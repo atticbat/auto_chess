@@ -6,7 +6,8 @@
 class gui_button : public gui_checkbox
 {
 public:
-    game_state  destination = MENU;
+    game_state  destination;
+	gui_button();
     bool        get_checked(void);
 };
 

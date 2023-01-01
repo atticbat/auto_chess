@@ -5,10 +5,10 @@
 
 class gui_scrollbar : public gui_base
 {
-private:
 public:
+	gui_scrollbar();
     Rectangle   content;
-    Vector2     scroll = { 99, -20 };
+    Vector2     scroll;
 };
 
 void        set_scrollbar_content(gui_base *gui, float x_off, float y_off, \

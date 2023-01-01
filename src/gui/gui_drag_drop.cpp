@@ -1,6 +1,14 @@
 #include "gui_drag_drop.hpp"
 #include "gui_progress_bar.hpp"
 
+gui_drag_drop::gui_drag_drop()
+{
+	is_picked = false;
+	display = false;
+	unit_id = 0;
+	sprite = NULL;
+}
+
 void	gui_drag_drop::generate_picked_up_sprite (int id, int frames, \
 	mINI::INIFile file)
 {

@@ -6,10 +6,11 @@
 class gui_dynamic_label : public gui_base
 {
 private:
-    int     value = 0;
-    int     original_length = 0;
-    bool    percentage = false;
+    int     value;
+    int     original_length;
+    bool    percentage;
 public:
+	gui_dynamic_label();
     void    set_text(int id, int mode, int size, mINI::INIFile file);
 	void    update_text(int _value, bool _percentage);
 };

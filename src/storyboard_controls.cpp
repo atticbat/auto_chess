@@ -36,24 +36,24 @@ void    draw_gui(std::multimap <gui_type, gui_base *> *gui, game_settings \
             case G_LABEL:
             case G_DYNAMIC_LABEL:
             {
-                DrawText(i->second->text, i->second->bounds.x, \
+                DrawText(i->second->text.c_str(), i->second->bounds.x, \
                     i->second->bounds.y, i->second->text_size, BLACK);
             } break ;
             case G_HITBOX:
             {
                 GuiDrawRectangle(i->second->bounds, 0, BLACK, BEIGE);
-                DrawText(i->second->text, i->second->bounds.x + 16, \
+                DrawText(i->second->text.c_str(), i->second->bounds.x + 16, \
                     i->second->bounds.y + 32, i->second->text_size, BLACK);
             } break ;
             case G_CHECKBOX:
             {
                 set_checkbox(i->second, GuiCheckBox(i->second->bounds, \
-                    i->second->text, check_checkbox(i->second)));
+                    i->second->text.c_str(), check_checkbox(i->second)));
             } break ;
             case G_BUTTON:
             {
                 set_button(i->second, GuiButton(i->second->bounds, \
-                    i->second->text));
+                    i->second->text.c_str()));
             } break ;
             case G_SLIDER:
             {

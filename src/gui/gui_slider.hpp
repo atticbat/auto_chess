@@ -6,9 +6,9 @@
 class gui_slider : public gui_base
 {
 public:
-    float   value = 0;
-    float   min = 0;
-    float   max = 100;
+    float   value;
+    float   min;
+    float   max;
     gui_slider(float _value, float _min, float _max);
 };
 

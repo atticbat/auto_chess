@@ -1,12 +1,15 @@
 #include "gui_base.hpp"
 
+gui_base::gui_base()
+{
+	unique_id = 0;
+	gui_id = 0;
+	text_size = 32;
+	//could add bounds & text here too
+}
+
 gui_base::~gui_base()
 {
-    if (text)
-    {
-        free (text);
-        text = NULL;
-    }
 }
 
 void	gui_base::set_bounds(int offset_x, int offset_y, int mode, \
@@ -15,7 +18,7 @@ void	gui_base::set_bounds(int offset_x, int offset_y, int mode, \
     mINI::INIStructure ini;
     float param[4];
     int i;
-    char    str[20];
+    std::string	str;
     int from = 0;
     int to = 0;
     char    c[5];
@@ -23,7 +26,7 @@ void	gui_base::set_bounds(int offset_x, int offset_y, int mode, \
     ft_itoa(gui_id, c);
     file.read(ini);
     i = 0;
-    ft_strlcpy(str, ini.get(bound_modes[mode]).get(c).c_str(), 20);
+    str = ini.get(bound_modes[mode]).get(c);
     while (i < 4)
     {
         param[i] = 0;
