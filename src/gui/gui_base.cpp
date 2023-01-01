@@ -42,8 +42,8 @@ void	gui_base::set_bounds(int offset_x, int offset_y, int mode, \
         if (i < 4)
             from = to + 1;
     }
-    bounds = (Rectangle) { (param[0] + offset_x) * multiplier, (param[1] \
-        + offset_y) * multiplier, param[2] * multiplier, param[3] * \
+    bounds = (Rectangle) { (param[0]) * multiplier, (param[1] \
+        ) * multiplier, param[2] * multiplier, param[3] * \
         multiplier };
 }
 
