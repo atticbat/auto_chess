@@ -1,137 +1,117 @@
 #include "storyboard_controls.hpp"
-
 #ifndef RAYGUI_IMPLEMENTATION
-# define RAYGUI_IMPLEMENTATION
+#define RAYGUI_IMPLEMENTATION
 #endif
 #include "../raylib-cpp/include/raygui.h"
 
-void    set_boundaries(std::multimap <gui_type, gui_base *> *gui, \
-    int off_x, int off_y, mINI::INIFile file, float scale)
-{
-    for (std::multimap <gui_type, gui_base *>::iterator i = gui->begin(); \
-        i != gui->end(); ++i)
-    {
-        i->second->set_bounds(off_x, off_y, (int)i->first, file, scale);
-        i->second->text_size = i->second->text_size * scale;
+void set_boundaries(std::multimap<gui_type, gui_base *> *gui, int off_x,
+                    int off_y, mINI::INIFile file, float scale) {
+  for (std::multimap<gui_type, gui_base *>::iterator i = gui->begin();
+       i != gui->end(); ++i) {
+    i->second->set_bounds(off_x, off_y, (int)i->first, file, scale);
+    i->second->text_size = i->second->text_size * scale;
+  }
+}
+
+static void draw_sprites(std::multimap<gui_type, gui_base *> *gui,
+                         game_settings settings) {
+  auto range = gui->equal_range(G_DRAG_DROP);
+
+  for (auto i = range.first; i != range.second; ++i)
+    draw_drag_drops(i->second, settings);
+}
+
+void draw_gui(std::multimap<gui_type, gui_base *> *gui,
+              game_settings settings) {
+  for (std::multimap<gui_type, gui_base *>::iterator i = gui->begin();
+       i != gui->end(); ++i) {
+    switch (i->first) {
+    case G_LABEL:
+    case G_DYNAMIC_LABEL: {
+      DrawText(i->second->text.c_str(), i->second->bounds.x,
+               i->second->bounds.y, i->second->text_size, BLACK);
+    } break;
+    case G_HITBOX: {
+      GuiDrawRectangle(i->second->bounds, 0, BLACK, BEIGE);
+      DrawText(i->second->text.c_str(), i->second->bounds.x + 16,
+               i->second->bounds.y + 32, i->second->text_size, BLACK);
+    } break;
+    case G_CHECKBOX: {
+      set_checkbox(i->second,
+                   GuiCheckBox(i->second->bounds, i->second->text.c_str(),
+                               check_checkbox(i->second)));
+    } break;
+    case G_BUTTON: {
+      set_button(i->second,
+                 GuiButton(i->second->bounds, i->second->text.c_str()));
+    } break;
+    case G_SLIDER: {
+      set_slider(i->second, GuiSliderBar(i->second->bounds, NULL, NULL,
+                                         check_slider_value(i->second),
+                                         check_slider_min(i->second),
+                                         check_slider_max(i->second)));
+    } break;
+    case G_SCROLLBAR: {
+      GuiScrollPanel(i->second->bounds, NULL,
+                     check_scrollbar_content(i->second),
+                     get_scrollbar_scroll(i->second));
+    } break;
+    case G_DROPDOWN: {
+      draw_dropdowns(i->second);
+    } break;
+    case G_TEXTBOX: {
+      draw_textbox(i->second);
+    } break;
+    case G_DRAG_DROP: {
+      GuiDrawRectangle(i->second->bounds, 1, BLACK, RAYWHITE);
+
+    } break;
+    case G_PROGRESS_BAR: {
+      gui_progress_bar *bar = dynamic_cast<gui_progress_bar *>(i->second);
+
+      if (bar)
+        GuiProgressBar(bar->bounds, NULL, NULL, bar->value, bar->min, bar->max);
+    } break;
+    default:
+      break;
     }
+  }
+  draw_sprites(gui, settings);
 }
 
-static void draw_sprites(std::multimap <gui_type, gui_base *> *gui, \
-    game_settings settings)
-{
-    auto    range = gui->equal_range(G_DRAG_DROP);
+gui_base *find_gui_by_id(std::multimap<gui_type, gui_base *> *gui, int id,
+                         gui_type state) {
+  auto range = gui->equal_range(state);
 
-    for (auto i = range.first; i != range.second; ++i)
-        draw_drag_drops(i->second, settings);
+  for (auto i = range.first; i != range.second; ++i) {
+    if (i->second->unique_id == id)
+      return (i->second);
+  }
+  return (NULL);
 }
 
-void    draw_gui(std::multimap <gui_type, gui_base *> *gui, game_settings \
-    settings)
-{
-    for (std::multimap <gui_type, gui_base *>::iterator i = gui->begin(); \
-        i != gui->end(); ++i)
-    {
-        switch (i->first)
-        {
-            case G_LABEL:
-            case G_DYNAMIC_LABEL:
-            {
-                DrawText(i->second->text.c_str(), i->second->bounds.x, \
-                    i->second->bounds.y, i->second->text_size, BLACK);
-            } break ;
-            case G_HITBOX:
-            {
-                GuiDrawRectangle(i->second->bounds, 0, BLACK, BEIGE);
-                DrawText(i->second->text.c_str(), i->second->bounds.x + 16, \
-                    i->second->bounds.y + 32, i->second->text_size, BLACK);
-            } break ;
-            case G_CHECKBOX:
-            {
-                set_checkbox(i->second, GuiCheckBox(i->second->bounds, \
-                    i->second->text.c_str(), check_checkbox(i->second)));
-            } break ;
-            case G_BUTTON:
-            {
-                set_button(i->second, GuiButton(i->second->bounds, \
-                    i->second->text.c_str()));
-            } break ;
-            case G_SLIDER:
-            {
-                set_slider(i->second, GuiSliderBar(i->second->bounds, \
-                    NULL, NULL, check_slider_value(i->second), \
-                    check_slider_min(i->second), check_slider_max(i->second)));
-            } break ;
-            case G_SCROLLBAR:
-            {
-                GuiScrollPanel(i->second->bounds, NULL, \
-                    check_scrollbar_content(i->second), \
-                    get_scrollbar_scroll(i->second));
-            } break ;
-            case G_DROPDOWN:
-            {
-                draw_dropdowns(i->second);
-            } break ;
-            case G_TEXTBOX:
-            {
-                draw_textbox(i->second);
-            } break ;
-            case G_DRAG_DROP:
-            {
-                GuiDrawRectangle(i->second->bounds, 1, BLACK, RAYWHITE);
-
-            } break ;
-            case G_PROGRESS_BAR:
-            {
-                gui_progress_bar    *bar = dynamic_cast <gui_progress_bar *> (i->second);
-
-                if (bar)
-                    GuiProgressBar(bar->bounds, NULL, NULL, \
-                        bar->value, bar->min, bar->max);
-            } break ;
-            default: break ;
-        }
-    }
-    draw_sprites(gui, settings);
+void del_gui(std::multimap<gui_type, gui_base *> *gui) {
+  for (std::multimap<gui_type, gui_base *>::iterator i = gui->begin();
+       i != gui->end(); ++i)
+    delete (i->second);
+  gui->clear();
 }
 
+game_state check_gui(std::multimap<gui_type, gui_base *> *gui,
+                     game_settings *settings) {
+  game_state state = settings->state;
 
-gui_base    *find_gui_by_id(std::multimap <gui_type, gui_base*> *gui, \
-    int id, gui_type state)
-{
-    auto    range = gui->equal_range(state);
-
-    for (auto i = range.first; i != range.second; ++i)
-    {
-        if (i->second->unique_id == id)
-            return (i->second);
-    }
-    return (NULL);
-}
-
-void    del_gui(std::multimap <gui_type, gui_base *> *gui)
-{
-    for (std::multimap <gui_type, gui_base *>::iterator i = gui->begin(); \
-        i != gui->end(); ++i)
-        delete (i->second);
-    gui->clear(); 
-}
-
-game_state  check_gui(std::multimap <gui_type, gui_base *> *gui, \
-    game_settings *settings)
-{
-    game_state  state = settings->state;
-
-    settings->state = check_buttons(gui, settings->state);
-    if (state != settings->state && (int)settings->state < 8)
-        settings->initialised = false;
-    // if (settings->state == LOAD)
-    //     settings->new_game = false;
-    // else
-    //     settings->new_game = true;
-    check_dropdowns(gui, settings->mouse_point);
-    check_textboxes(gui, settings->mouse_point);
-    check_drag_drops(gui, settings->mouse_point, settings->user);
-    if (settings->state == DRAFT)
-        update_label(find_gui_by_id(gui, 0, G_DYNAMIC_LABEL), settings->user);
-    return (settings->state);
+  settings->state = check_buttons(gui, settings->state);
+  if (state != settings->state && (int)settings->state < 8)
+    settings->initialised = false;
+  // if (settings->state == LOAD)
+  //     settings->new_game = false;
+  // else
+  //     settings->new_game = true;
+  check_dropdowns(gui, settings->mouse_point);
+  check_textboxes(gui, settings->mouse_point);
+  check_drag_drops(gui, settings->mouse_point, settings->user);
+  if (settings->state == DRAFT)
+    update_label(find_gui_by_id(gui, 0, G_DYNAMIC_LABEL), settings->user);
+  return (settings->state);
 }

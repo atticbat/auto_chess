@@ -1,7 +1,7 @@
 # -*- MakeFile -*-
 
 VPATH	=	src src/gui
-
+UNAME	=	$(shell uname)
 NAME	=	auto_chess
 FUNCTS	=	main.cpp sprite.cpp menu.cpp ft_itoa.cpp settings.cpp draft.cpp \
 			database.cpp game_progression.cpp gui_checkbox.cpp \
@@ -14,8 +14,17 @@ OBJS	=	$(addprefix _bin/,$(notdir $(FUNCTS:.cpp=.o)))
 BREW	=	$(shell brew --prefix)
 CC		=	g++
 CFLAGS	= 	-std=c++0x -O3
-IFLAGS	=	-I raylib-cpp/include
-LFLAGS	=	-L ./raylib/build/raylib/ -lraylib -lGL -lm -lpthread -ldl -lrt -lX11 
+IFLAGS	=
+LFLAGS	=
+
+# ifeq ($(uname), "Darwin")
+	LFLAGS	:=	-L $(BREW)/lib -lraylib -lcurl
+	IFLAGS	:=	-I $(BREW)/include
+# else ifeq ($(uname), "Linux")
+	# LFLAGS	:=	-L ./raylib/build/raylib/ -lraylib -lGL -lm -lpthread -ldl -lrt -lX11
+	# IFLAGS	:=	-I raylib-cpp/include
+# endif
+
 RM 		=	/bin/rm -f
 
 $(NAME): $(OBJS) 

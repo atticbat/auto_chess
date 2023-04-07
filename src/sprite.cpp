@@ -16,7 +16,6 @@
 //         btn->state = 0;
 //     btn->source.x = btn->state * btn->width;
 // }
-
 // void    unload_sprite(sprite **btn, int count)
 // {
 //     int i;
