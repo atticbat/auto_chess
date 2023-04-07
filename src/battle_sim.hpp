@@ -11,9 +11,7 @@ private:
   int target_pos = 0;
   int max_range = 1;
   int dead_zone = -1;
-  // idk if i need this v
   const int total_slots = 56;
-  // idk if i need this ^
   int move_from = 0;
   int move_to = 0;
   int current_unit = 0;

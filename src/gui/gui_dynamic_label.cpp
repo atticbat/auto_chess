@@ -15,10 +15,11 @@ void gui_dynamic_label::set_text(int id, int mode, int size,
   ft_itoa(id, c);
   file.read(ini);
   text = ini.get(text_modes[mode]).get(c);
+  _base_string = text;
   original_length = text.length();
 }
 void gui_dynamic_label::update_text(int _value, bool _percentage) {
-  static std::string holder = text;
+  // static std::string holder = text;
   std::string value_string;
 
   value = _value;
@@ -26,7 +27,7 @@ void gui_dynamic_label::update_text(int _value, bool _percentage) {
   value_string = std::to_string(value);
   if (percentage)
     value_string = value_string + "%";
-  text = holder + value_string;
+  text = _base_string + value_string;
 }
 void update_label(gui_base *gui, default_run *user) {
   gui_dynamic_label *label = dynamic_cast<gui_dynamic_label *>(gui);

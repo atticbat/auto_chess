@@ -5,6 +5,7 @@ class gui_dynamic_label : public gui_base {
 private:
   int value;
   int original_length;
+  std::string _base_string;
   bool percentage;
 
 public:
